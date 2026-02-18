@@ -53,6 +53,7 @@ El Fontanero (DevOps) y El Traductor (documentacion).
 - /alfred audit - Auditoria completa del codigo (calidad + seguridad + simplificacion)
 - /alfred config - Ver o modificar la configuracion del plugin
 - /alfred status - Estado de la sesion de trabajo activa
+- /alfred update - Comprobar y aplicar actualizaciones del plugin
 - /alfred help - Ayuda detallada de todos los comandos
 
 ### Reglas de operacion
@@ -131,6 +132,26 @@ except (json.JSONDecodeError, KeyError) as e:
 ${STATE_INFO}
 
 Puedes continuar la sesion con /alfred status o avanzar a la siguiente fase."
+  fi
+fi
+
+# --- Comprobacion de actualizaciones ---
+
+# Consulta la ultima release publicada en GitHub. Si hay version nueva,
+# anade un aviso al contexto de sesion. Falla silenciosamente si no hay
+# red, se excede el timeout (3s) o la API devuelve error.
+CURRENT_VERSION="0.1.0"
+if command -v curl &>/dev/null; then
+  LATEST_RELEASE=$(curl -s --max-time 3 \
+    "https://api.github.com/repos/686f6c61/Claude-JARVIS-dev/releases/latest" \
+    | python3 -c "import json,sys; print(json.load(sys.stdin).get('tag_name','').lstrip('v'))" 2>/dev/null || echo "")
+
+  if [[ -n "$LATEST_RELEASE" && "$LATEST_RELEASE" != "$CURRENT_VERSION" ]]; then
+    CONTEXT="${CONTEXT}
+
+### Actualizacion disponible
+
+Hay una nueva version de Alfred Dev: v${LATEST_RELEASE} (actual: v${CURRENT_VERSION}). Ejecuta /alfred update para actualizar."
   fi
 fi
 

@@ -114,6 +114,7 @@ mkdir -p "${MARKETPLACE_DIR}/.claude-plugin"
 # Clonar en un directorio temporal para extraer los ficheros del marketplace
 TEMP_DIR=$(mktemp -d)
 git clone --quiet --depth 1 "https://github.com/${REPO}.git" "${TEMP_DIR}"
+GIT_SHA=$(git -C "${TEMP_DIR}" rev-parse HEAD)
 
 # Copiar la estructura completa del plugin al marketplace
 cp -r "${TEMP_DIR}/.claude-plugin/marketplace.json" "${MARKETPLACE_DIR}/.claude-plugin/"
@@ -170,6 +171,7 @@ plugin_key = '${PLUGIN_NAME}@${PLUGIN_NAME}'
 install_path = '${INSTALL_DIR}'
 version = '${VERSION}'
 timestamp = '${TIMESTAMP}'
+git_sha = '${GIT_SHA}'
 
 with open(installed_file, 'r') as f:
     data = json.load(f)
@@ -182,7 +184,8 @@ data['plugins'][plugin_key] = [{
     'installPath': install_path,
     'version': version,
     'installedAt': timestamp,
-    'lastUpdated': timestamp
+    'lastUpdated': timestamp,
+    'gitCommitSha': git_sha
 }]
 
 with open(installed_file, 'w') as f:

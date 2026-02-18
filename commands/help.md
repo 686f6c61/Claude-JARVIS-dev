@@ -15,6 +15,9 @@ Muestra al usuario la siguiente tabla de comandos disponibles con descripcion y 
 | `/alfred audit` | -- | Auditoria completa con 4 agentes en paralelo |
 | `/alfred config` | -- | Configurar autonomia, stack, compliance y personalidad |
 | `/alfred status` | -- | Estado de la sesion activa |
+| `/alfred update` | -- | Comprobar y aplicar actualizaciones del plugin |
 | `/alfred help` | -- | Esta ayuda |
+
+Ademas, al escribir `/alfred` sin subcomando, Alfred actua como asistente contextual: evalua el estado del proyecto y la sesion, y dirige al usuario al flujo mas adecuado.
 
 Explica brevemente que Alfred Dev es un equipo de 8 agentes especializados que cubren el ciclo completo de ingenieria de software, con quality gates infranqueables y compliance RGPD/NIS2/CRA integrado.
