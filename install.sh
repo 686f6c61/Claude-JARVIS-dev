@@ -18,7 +18,7 @@ set -euo pipefail
 
 REPO="686f6c61/Claude-JARVIS-dev"
 PLUGIN_NAME="alfred-dev"
-VERSION="0.1.0"
+VERSION="0.1.1"
 CLAUDE_DIR="${HOME}/.claude"
 PLUGINS_DIR="${CLAUDE_DIR}/plugins"
 CACHE_DIR="${PLUGINS_DIR}/cache/${PLUGIN_NAME}"
@@ -74,14 +74,10 @@ if [ ! -f "${KNOWN_MARKETPLACES}" ]; then
     echo '{}' > "${KNOWN_MARKETPLACES}"
 fi
 
-python3 -c "
-import json
+python3 - "${KNOWN_MARKETPLACES}" "${PLUGIN_NAME}" "${MARKETPLACE_DIR}" "${REPO}" "${TIMESTAMP}" <<'PYEOF'
+import json, sys
 
-known_file = '${KNOWN_MARKETPLACES}'
-marketplace_name = '${PLUGIN_NAME}'
-marketplace_dir = '${MARKETPLACE_DIR}'
-repo = '${REPO}'
-timestamp = '${TIMESTAMP}'
+known_file, marketplace_name, marketplace_dir, repo, timestamp = sys.argv[1:6]
 
 with open(known_file, 'r') as f:
     data = json.load(f)
@@ -97,7 +93,7 @@ data[marketplace_name] = {
 
 with open(known_file, 'w') as f:
     json.dump(data, f, indent=2)
-"
+PYEOF
 
 ok "Marketplace registrado en known_marketplaces.json"
 
@@ -163,15 +159,10 @@ if [ ! -f "${INSTALLED_FILE}" ]; then
     echo '{"version":2,"plugins":{}}' > "${INSTALLED_FILE}"
 fi
 
-python3 -c "
-import json
+python3 - "${INSTALLED_FILE}" "${PLUGIN_NAME}@${PLUGIN_NAME}" "${INSTALL_DIR}" "${VERSION}" "${TIMESTAMP}" "${GIT_SHA}" <<'PYEOF'
+import json, sys
 
-installed_file = '${INSTALLED_FILE}'
-plugin_key = '${PLUGIN_NAME}@${PLUGIN_NAME}'
-install_path = '${INSTALL_DIR}'
-version = '${VERSION}'
-timestamp = '${TIMESTAMP}'
-git_sha = '${GIT_SHA}'
+installed_file, plugin_key, install_path, version, timestamp, git_sha = sys.argv[1:7]
 
 with open(installed_file, 'r') as f:
     data = json.load(f)
@@ -190,18 +181,17 @@ data['plugins'][plugin_key] = [{
 
 with open(installed_file, 'w') as f:
     json.dump(data, f, indent=2)
-"
+PYEOF
 
 ok "Plugin registrado en installed_plugins.json"
 
 # -- 5. Habilitar en settings.json -----------------------------------------
 
 if [ -f "${SETTINGS_FILE}" ]; then
-    python3 -c "
-import json
+    python3 - "${SETTINGS_FILE}" "${PLUGIN_NAME}@${PLUGIN_NAME}" <<'PYEOF'
+import json, sys
 
-settings_file = '${SETTINGS_FILE}'
-plugin_key = '${PLUGIN_NAME}@${PLUGIN_NAME}'
+settings_file, plugin_key = sys.argv[1:3]
 
 with open(settings_file, 'r') as f:
     data = json.load(f)
@@ -213,7 +203,7 @@ data['enabledPlugins'][plugin_key] = True
 
 with open(settings_file, 'w') as f:
     json.dump(data, f, indent=2)
-"
+PYEOF
     ok "Plugin habilitado en settings.json"
 else
     info "No se encontro settings.json (se habilitara al iniciar Claude Code)"

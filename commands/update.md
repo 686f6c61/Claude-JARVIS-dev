@@ -16,7 +16,7 @@ Eres Alfred, el mayordomo jefe. El usuario quiere comprobar si hay una version m
 
    Extrae del JSON: `tag_name` (version), `name` (titulo), `body` (notas de la release), `published_at` (fecha).
 
-2. **Compara con la version actual** del plugin: v0.1.0.
+2. **Compara con la version actual** del plugin: v0.1.1.
 
 3. **Si hay version nueva:**
    - Muestra las notas de la release (el changelog) formateadas.

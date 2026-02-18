@@ -122,7 +122,7 @@ except FileNotFoundError:
 except (json.JSONDecodeError, KeyError) as e:
     print(f'[Alfred Dev] Aviso: estado de sesion corrupto o incompleto: {e}', file=sys.stderr)
     sys.exit(0)
-" "$STATE_FILE" 2>&2) || echo "")
+" "$STATE_FILE" 2>/dev/null || echo "")
 
   if [[ -n "$STATE_INFO" ]]; then
     CONTEXT="${CONTEXT}
@@ -140,7 +140,7 @@ fi
 # Consulta la ultima release publicada en GitHub. Si hay version nueva,
 # anade un aviso al contexto de sesion. Falla silenciosamente si no hay
 # red, se excede el timeout (3s) o la API devuelve error.
-CURRENT_VERSION="0.1.0"
+CURRENT_VERSION="0.1.1"
 if command -v curl &>/dev/null; then
   LATEST_RELEASE=$(curl -s --max-time 3 \
     "https://api.github.com/repos/686f6c61/Claude-JARVIS-dev/releases/latest" \

@@ -63,6 +63,16 @@ def main():
     fase_numero = session.get("fase_numero", 0)
     fases = flow.get("fases", [])
 
+    # Validacion defensiva: fase_numero debe ser entero para las
+    # comparaciones con len(fases). Si no lo es, el estado es incoherente.
+    if not isinstance(fase_numero, int):
+        print(
+            f"[Alfred Dev] Aviso: 'fase_numero' no es un entero "
+            f"en el estado de sesion. Estado incoherente.",
+            file=sys.stderr,
+        )
+        sys.exit(0)
+
     # Si el numero de fase excede las fases disponibles, la sesion esta incoherente
     if fase_numero >= len(fases):
         print(

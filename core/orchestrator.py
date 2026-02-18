@@ -14,11 +14,11 @@ El orquestador se encarga de:
 - Persistir y recuperar el estado de las sesiones en disco.
 
 Arquitectura de gates:
-    Las gates actuan como puntos de control entre fases. Hay dos tipos
-    principales: las HARD_GATES (obligatorias e infranqueables) y las
-    gates normales que dependen del resultado reportado. Las gates de
-    tipo «usuario» requieren aprobacion explicita; las «automatico» se
-    evaluan contra metricas objetivas como tests verdes o pipeline OK.
+    Las gates actuan como puntos de control entre fases. Su comportamiento
+    depende del tipo definido en cada fase: las gates de tipo «usuario»
+    requieren aprobacion explicita; las «automatico» se evaluan contra
+    metricas objetivas como tests verdes o pipeline OK; las combinadas
+    (ej. «automatico+seguridad») acumulan ambas condiciones.
 """
 
 import json
@@ -241,10 +241,6 @@ FLOWS: Dict[str, Dict[str, Any]] = {
         ],
     },
 }
-
-# Gates infranqueables: si alguna de estas condiciones no se cumple,
-# el avance se bloquea independientemente de cualquier otro criterio.
-HARD_GATES = {"tests_verdes", "qa_seguridad_aprobado", "pipeline_verde"}
 
 
 def create_session(command: str, description: str) -> Dict[str, Any]:
@@ -493,11 +489,32 @@ def load_state(state_path: str) -> Optional[Dict[str, Any]]:
         )
         return None
 
-    # Validar estructura minima
+    # Validar estructura minima: presencia de claves obligatorias
     if not isinstance(data, dict) or not _REQUIRED_STATE_KEYS.issubset(data.keys()):
         print(
             f"[Alfred Dev] Aviso: el fichero de estado '{state_path}' tiene una "
             f"estructura inesperada (faltan claves obligatorias). Se ignorara.",
+            file=sys.stderr,
+        )
+        return None
+
+    # Validar tipos de las claves obligatorias para evitar TypeError
+    # en comparaciones posteriores (ej: fase_numero >= len(fases))
+    if not isinstance(data.get("comando"), str):
+        print(
+            f"[Alfred Dev] Aviso: 'comando' no es un string en '{state_path}'. Se ignorara.",
+            file=sys.stderr,
+        )
+        return None
+    if not isinstance(data.get("fase_actual"), str):
+        print(
+            f"[Alfred Dev] Aviso: 'fase_actual' no es un string en '{state_path}'. Se ignorara.",
+            file=sys.stderr,
+        )
+        return None
+    if not isinstance(data.get("fase_numero"), int):
+        print(
+            f"[Alfred Dev] Aviso: 'fase_numero' no es un entero en '{state_path}'. Se ignorara.",
             file=sys.stderr,
         )
         return None

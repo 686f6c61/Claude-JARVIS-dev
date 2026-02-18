@@ -47,49 +47,49 @@ fi
 
 # Eliminar marketplace de known_marketplaces.json
 if [ -f "${KNOWN_MARKETPLACES}" ]; then
-    python3 -c "
-import json
-known_file = '${KNOWN_MARKETPLACES}'
-marketplace_name = '${PLUGIN_NAME}'
+    python3 - "${KNOWN_MARKETPLACES}" "${PLUGIN_NAME}" <<'PYEOF'
+import json, sys
+
+known_file, marketplace_name = sys.argv[1:3]
 with open(known_file, 'r') as f:
     data = json.load(f)
 if marketplace_name in data:
     del data[marketplace_name]
 with open(known_file, 'w') as f:
     json.dump(data, f, indent=2)
-"
+PYEOF
     ok "Marketplace eliminado de known_marketplaces.json"
 fi
 
 # Eliminar registro de installed_plugins.json
 if [ -f "${INSTALLED_FILE}" ]; then
-    python3 -c "
-import json
-installed_file = '${INSTALLED_FILE}'
-plugin_key = '${PLUGIN_NAME}@${PLUGIN_NAME}'
+    python3 - "${INSTALLED_FILE}" "${PLUGIN_NAME}@${PLUGIN_NAME}" <<'PYEOF'
+import json, sys
+
+installed_file, plugin_key = sys.argv[1:3]
 with open(installed_file, 'r') as f:
     data = json.load(f)
 if plugin_key in data.get('plugins', {}):
     del data['plugins'][plugin_key]
 with open(installed_file, 'w') as f:
     json.dump(data, f, indent=2)
-"
+PYEOF
     ok "Registro eliminado de installed_plugins.json"
 fi
 
 # Deshabilitar en settings.json
 if [ -f "${SETTINGS_FILE}" ]; then
-    python3 -c "
-import json
-settings_file = '${SETTINGS_FILE}'
-plugin_key = '${PLUGIN_NAME}@${PLUGIN_NAME}'
+    python3 - "${SETTINGS_FILE}" "${PLUGIN_NAME}@${PLUGIN_NAME}" <<'PYEOF'
+import json, sys
+
+settings_file, plugin_key = sys.argv[1:3]
 with open(settings_file, 'r') as f:
     data = json.load(f)
 if plugin_key in data.get('enabledPlugins', {}):
     del data['enabledPlugins'][plugin_key]
 with open(settings_file, 'w') as f:
     json.dump(data, f, indent=2)
-"
+PYEOF
     ok "Plugin deshabilitado en settings.json"
 fi
 

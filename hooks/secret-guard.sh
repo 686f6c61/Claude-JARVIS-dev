@@ -18,6 +18,9 @@ set -euo pipefail
 # Se extrae tool_input completo para analizar el contenido que se va a escribir.
 # Politica de seguridad: fail-closed. Si no se puede parsear la entrada,
 # se bloquea la operacion por precaucion.
+# La cadena '|| PARSE_FAILED=1' evita que set -e intercepte el fallo,
+# permitiendo que el handler explicito actue con exit 2 (bloqueo).
+PARSE_FAILED=0
 HOOK_INPUT=$(python3 -c "
 import json, sys
 
@@ -39,10 +42,9 @@ try:
 except Exception as e:
     print(f'Error al parsear entrada del hook: {e}', file=sys.stderr)
     sys.exit(1)
-" 2>&1)
+" 2>&1) || PARSE_FAILED=1
 
-PARSE_EXIT=$?
-if [[ $PARSE_EXIT -ne 0 ]]; then
+if [[ $PARSE_FAILED -ne 0 ]]; then
   echo "[El Paranoico] No he podido analizar el contenido. Operacion bloqueada por precaucion." >&2
   exit 2
 fi
