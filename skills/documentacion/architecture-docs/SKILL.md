@@ -7,27 +7,27 @@ description: "Usar para documentar la arquitectura del sistema"
 
 ## Resumen
 
-Este skill genera documentacion arquitectonica que permite a cualquier desarrollador nuevo entender como funciona el sistema sin necesidad de leer todo el codigo. Cubre la vision general, los componentes principales, los flujos de datos, las dependencias externas y los enlaces a las decisiones arquitectonicas (ADRs) que explican el por que de cada eleccion.
+Este skill genera documentación arquitectónica que permite a cualquier desarrollador nuevo entender cómo funciona el sistema sin necesidad de leer todo el código. Cubre la visión general, los componentes principales, los flujos de datos, las dependencias externas y los enlaces a las decisiones arquitectónicas (ADRs) que explican el por qué de cada elección.
 
-La documentacion arquitectonica es un mapa del sistema: no necesita cubrir cada detalle, pero debe permitir orientarse y saber donde buscar.
+La documentación arquitectónica es un mapa del sistema: no necesita cubrir cada detalle, pero debe permitir orientarse y saber dónde buscar.
 
 ## Proceso
 
-1. **Redactar la vision general.** En 2-3 parrafos, explicar:
+1. **Redactar la visión general.** En 2-3 párrafos, explicar:
 
-   - Que es el sistema y que problema resuelve.
-   - A quien va dirigido (usuarios, otros servicios, el equipo interno).
-   - Que principios de diseno guian la arquitectura.
+   - Qué es el sistema y qué problema resuelve.
+   - A quién va dirigido (usuarios, otros servicios, el equipo interno).
+   - Qué principios de diseño guían la arquitectura.
 
 2. **Documentar los componentes principales.** Para cada componente significativo:
 
-   - Nombre y proposito.
-   - Responsabilidades (que hace y que no hace).
-   - Tecnologias que usa.
-   - Interfaces publicas (como se comunica con otros componentes).
-   - Ubicacion en el codigo (directorio o modulo).
+   - Nombre y propósito.
+   - Responsabilidades (qué hace y qué no hace).
+   - Tecnologías que usa.
+   - Interfaces públicas (cómo se comunica con otros componentes).
+   - Ubicación en el código (directorio o módulo).
 
-3. **Generar diagrama de componentes con Mermaid.** Un diagrama vale mas que mil palabras, pero solo si es claro:
+3. **Generar diagrama de componentes con Mermaid.** Un diagrama vale más que mil palabras, pero solo si es claro:
 
    ```mermaid
    graph TD
@@ -49,9 +49,9 @@ La documentacion arquitectonica es un mapa del sistema: no necesita cubrir cada 
      C --> D
    ```
 
-   Mantener el diagrama simple. Si es demasiado complejo, dividir en multiples diagramas por dominio.
+   Mantener el diagrama simple. Si es demasiado complejo, dividir en múltiples diagramas por dominio.
 
-4. **Documentar los flujos de datos principales.** Para los 2-3 flujos mas importantes del sistema, generar diagramas de secuencia que muestren como se mueven los datos entre componentes:
+4. **Documentar los flujos de datos principales.** Para los 2-3 flujos más importantes del sistema, generar diagramas de secuencia que muestren cómo se mueven los datos entre componentes:
 
    ```mermaid
    sequenceDiagram
@@ -59,7 +59,7 @@ La documentacion arquitectonica es un mapa del sistema: no necesita cubrir cada 
      participant F as Frontend
      participant A as API
      participant D as DB
-     U->>F: Accion del usuario
+     U->>F: Acción del usuario
      F->>A: Request HTTP
      A->>D: Query
      D-->>A: Resultado
@@ -70,24 +70,24 @@ La documentacion arquitectonica es un mapa del sistema: no necesita cubrir cada 
 5. **Listar dependencias externas.** Servicios de terceros de los que depende el sistema:
 
    - Nombre del servicio.
-   - Para que se usa.
-   - Que pasa si no esta disponible (fallback, degradacion, fallo total).
-   - Enlace a su documentacion.
+   - Para qué se usa.
+   - Qué pasa si no está disponible (fallback, degradación, fallo total).
+   - Enlace a su documentación.
 
-6. **Enlazar decisiones arquitectonicas.** Referenciar los ADRs relevantes que explican por que se tomaron las decisiones de diseno. Si no hay ADRs, considerar crearlos con el skill `write-adr`.
+6. **Enlazar decisiones arquitectónicas.** Referenciar los ADRs relevantes que explican por qué se tomaron las decisiones de diseño. Si no hay ADRs, considerar crearlos con el skill `write-adr`.
 
-7. **Incluir instrucciones de desarrollo.** Como levantar el entorno de desarrollo:
+7. **Incluir instrucciones de desarrollo.** Cómo levantar el entorno de desarrollo:
 
    - Requisitos previos (versiones de lenguaje, herramientas).
    - Pasos para arrancar el proyecto desde cero.
-   - Como ejecutar tests.
+   - Cómo ejecutar tests.
    - Variables de entorno necesarias.
 
-## Criterios de exito
+## Criterios de éxito
 
-- La vision general explica que es el sistema y para que sirve en 2-3 parrafos.
-- Cada componente principal esta documentado con proposito, responsabilidades e interfaces.
+- La visión general explica qué es el sistema y para qué sirve en 2-3 párrafos.
+- Cada componente principal está documentado con propósito, responsabilidades e interfaces.
 - Hay al menos un diagrama de componentes y un diagrama de secuencia en Mermaid.
-- Las dependencias externas estan listadas con su impacto en caso de fallo.
-- Las decisiones arquitectonicas estan referenciadas o documentadas.
+- Las dependencias externas están listadas con su impacto en caso de fallo.
+- Las decisiones arquitectónicas están referenciadas o documentadas.
 - Las instrucciones de desarrollo permiten a un nuevo miembro del equipo arrancar el proyecto.

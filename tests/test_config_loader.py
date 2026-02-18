@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests para el cargador de configuracion del plugin."""
+"""Tests para el cargador de configuración del plugin."""
 
 import json
 import os
@@ -16,17 +16,17 @@ class TestLoadConfig(unittest.TestCase):
     def test_returns_defaults_when_no_file(self):
         config = load_config("/ruta/que/no/existe")
         self.assertEqual(config["autonomia"]["producto"], "interactivo")
-        self.assertEqual(config["autonomia"]["seguridad"], "autonomo")
+        self.assertEqual(config["autonomia"]["seguridad"], "autónomo")
         self.assertEqual(config["personalidad"]["nivel_sarcasmo"], 3)
 
     def test_loads_yaml_frontmatter(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
-            f.write("---\nautonomia:\n  producto: autonomo\n---\n# Notas\n")
+            f.write("---\nautonomia:\n  producto: autónomo\n---\n# Notas\n")
             f.flush()
             config = load_config(f.name)
         os.unlink(f.name)
-        self.assertEqual(config["autonomia"]["producto"], "autonomo")
-        self.assertEqual(config["autonomia"]["seguridad"], "autonomo")
+        self.assertEqual(config["autonomia"]["producto"], "autónomo")
+        self.assertEqual(config["autonomia"]["seguridad"], "autónomo")
 
     def test_extracts_notes_section(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:

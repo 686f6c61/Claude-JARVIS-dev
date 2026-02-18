@@ -29,7 +29,7 @@ class TestFlows(unittest.TestCase):
 
 class TestSession(unittest.TestCase):
     def test_create_session(self):
-        session = create_session("feature", "Sistema de autenticacion")
+        session = create_session("feature", "Sistema de autenticación")
         self.assertEqual(session["comando"], "feature")
         self.assertEqual(session["fase_actual"], "producto")
         self.assertEqual(session["fase_numero"], 0)
@@ -60,9 +60,9 @@ class TestGates(unittest.TestCase):
         self.assertFalse(result["passed"])
 
     def test_automatic_gate_fails_when_tests_fail(self):
-        """Las gates automaticas bloquean si los tests no pasan."""
+        """Las gates automáticas bloquean si los tests no pasan."""
         session = create_session("feature", "Test")
-        # Avanzar a fase de desarrollo (gate automatica)
+        # Avanzar a fase de desarrollo (gate automática)
         session = advance_phase(session)  # producto -> arquitectura
         session = advance_phase(session)  # arquitectura -> desarrollo
         result = check_gate(session, resultado="aprobado", tests_ok=False)
@@ -70,7 +70,7 @@ class TestGates(unittest.TestCase):
         self.assertIn("tests", result["reason"].lower())
 
     def test_automatic_gate_passes_when_tests_ok(self):
-        """Las gates automaticas dejan pasar si tests y resultado OK."""
+        """Las gates automáticas dejan pasar si tests y resultado OK."""
         session = create_session("feature", "Test")
         session = advance_phase(session)  # producto
         session = advance_phase(session)  # arquitectura
@@ -83,7 +83,7 @@ class TestGates(unittest.TestCase):
         session = advance_phase(session)  # producto
         session = advance_phase(session)  # arquitectura
         session = advance_phase(session)  # desarrollo
-        # Fase de calidad: gate automatico+seguridad
+        # Fase de calidad: gate automático+seguridad
         result = check_gate(session, resultado="aprobado", security_ok=False)
         self.assertFalse(result["passed"])
         self.assertIn("seguridad", result["reason"].lower())
@@ -107,7 +107,7 @@ class TestAdvancePhase(unittest.TestCase):
         self.assertEqual(len(session["fases_completadas"]), 1)
 
     def test_cannot_advance_past_last_phase(self):
-        session = create_session("spike", "Investigacion")
+        session = create_session("spike", "Investigación")
         session = advance_phase(session, resultado="aprobado", artefactos=[])
         session = advance_phase(session, resultado="aprobado", artefactos=[])
         self.assertEqual(session["fase_actual"], "completado")

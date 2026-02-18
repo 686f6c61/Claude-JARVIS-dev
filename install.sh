@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# Alfred Dev -- script de instalacion para Claude Code
+# Alfred Dev -- script de instalación para Claude Code
 #
 # Uso:
 #   curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash
 #
-# Que hace:
+# Qué hace:
 #   1. Registra el marketplace en known_marketplaces.json
-#   2. Crea el directorio de marketplace con el catalogo del plugin
+#   2. Crea el directorio de marketplace con el catálogo del plugin
 #   3. Clona el repositorio en la cache de plugins de Claude Code
 #   4. Registra el plugin en installed_plugins.json
 #   5. Habilita el plugin en settings.json
@@ -18,7 +18,7 @@ set -euo pipefail
 
 REPO="686f6c61/Claude-JARVIS-dev"
 PLUGIN_NAME="alfred-dev"
-VERSION="0.1.1"
+VERSION="0.1.2"
 CLAUDE_DIR="${HOME}/.claude"
 PLUGINS_DIR="${CLAUDE_DIR}/plugins"
 CACHE_DIR="${PLUGINS_DIR}/cache/${PLUGIN_NAME}"
@@ -43,26 +43,45 @@ error() { printf "${RED}x${NC} %s\n" "$1" >&2; }
 
 # -- Verificaciones ---------------------------------------------------------
 
+# Validar que HOME apunta a un directorio real para evitar que las rutas
+# derivadas (CLAUDE_DIR, PLUGINS_DIR) apunten a ubicaciones inesperadas.
+if [[ -z "${HOME:-}" ]] || [[ ! -d "${HOME}" ]]; then
+    error "La variable HOME no está definida o no apunta a un directorio válido"
+    exit 1
+fi
+
 if [ ! -d "${CLAUDE_DIR}" ]; then
-    error "No se encontro el directorio ${CLAUDE_DIR}"
-    error "Asegurate de tener Claude Code instalado: https://docs.anthropic.com/en/docs/claude-code"
+    error "No se encontró el directorio ${CLAUDE_DIR}"
+    error "Asegúrate de tener Claude Code instalado: https://docs.anthropic.com/en/docs/claude-code"
     exit 1
 fi
 
 if ! command -v git &>/dev/null; then
-    error "git no esta instalado"
+    error "git no está instalado"
     exit 1
 fi
 
 if ! command -v python3 &>/dev/null; then
-    error "python3 no esta instalado"
+    error "python3 no está instalado"
     exit 1
 fi
 
-# -- Instalacion ------------------------------------------------------------
+# -- Limpieza automática en caso de interrupción ---------------------------
+
+# TEMP_DIR se asigna más adelante; el trap limpia si el script aborta
+# por error, SIGINT o cualquier otro motivo antes de terminar.
+TEMP_DIR=""
+cleanup() {
+    if [[ -n "${TEMP_DIR}" ]] && [[ -d "${TEMP_DIR}" ]]; then
+        rm -rf "${TEMP_DIR}"
+    fi
+}
+trap cleanup EXIT
+
+# -- Instalación ------------------------------------------------------------
 
 printf "\n${BOLD}Alfred Dev${NC} ${DIM}v${VERSION}${NC}\n"
-printf "${DIM}Plugin de ingenieria de software automatizada${NC}\n\n"
+printf "${DIM}Plugin de ingeniería de software automatizada${NC}\n\n"
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 
@@ -75,12 +94,20 @@ if [ ! -f "${KNOWN_MARKETPLACES}" ]; then
 fi
 
 python3 - "${KNOWN_MARKETPLACES}" "${PLUGIN_NAME}" "${MARKETPLACE_DIR}" "${REPO}" "${TIMESTAMP}" <<'PYEOF'
-import json, sys
+import json, os, sys, tempfile
 
 known_file, marketplace_name, marketplace_dir, repo, timestamp = sys.argv[1:6]
 
-with open(known_file, 'r') as f:
-    data = json.load(f)
+try:
+    with open(known_file, 'r') as f:
+        data = json.load(f)
+except json.JSONDecodeError as e:
+    print(f"Error: '{known_file}' contiene JSON inválido: {e}", file=sys.stderr)
+    print(f"Puedes restaurarlo con: echo '{{}}' > {known_file}", file=sys.stderr)
+    sys.exit(1)
+except OSError as e:
+    print(f"Error: no se pudo leer '{known_file}': {e}", file=sys.stderr)
+    sys.exit(1)
 
 data[marketplace_name] = {
     'source': {
@@ -91,8 +118,20 @@ data[marketplace_name] = {
     'lastUpdated': timestamp
 }
 
-with open(known_file, 'w') as f:
-    json.dump(data, f, indent=2)
+# Escritura atómica: fichero temporal + rename
+try:
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=os.path.dirname(known_file))
+    with os.fdopen(tmp_fd, 'w') as f:
+        json.dump(data, f, indent=2)
+    os.replace(tmp_path, known_file)
+except OSError as e:
+    print(f"Error: no se pudo escribir '{known_file}': {e}", file=sys.stderr)
+    # Limpiar temporal huérfano
+    try:
+        os.unlink(tmp_path)
+    except OSError:
+        pass
+    sys.exit(1)
 PYEOF
 
 ok "Marketplace registrado en known_marketplaces.json"
@@ -139,15 +178,19 @@ fi
 mkdir -p "${CACHE_DIR}"
 cp -r "${TEMP_DIR}" "${INSTALL_DIR}"
 
-# Limpiar artefactos innecesarios para runtime
-rm -rf "${INSTALL_DIR}/.git" \
-       "${INSTALL_DIR}/site" \
-       "${INSTALL_DIR}/install.sh" \
-       "${INSTALL_DIR}/tests" \
-       "${INSTALL_DIR}/.pytest_cache" 2>/dev/null || true
+# Limpiar artefactos innecesarios para runtime.
+# Se comprueba existencia antes de borrar para detectar rutas inesperadas.
+for artifact in .git site install.sh tests .pytest_cache; do
+    target="${INSTALL_DIR}/${artifact}"
+    if [ -e "${target}" ]; then
+        rm -rf "${target}" || echo "[Alfred Dev] Aviso: no se pudo eliminar ${target}" >&2
+    fi
+done
 
-# Limpiar directorio temporal
+# El trap cleanup EXIT se encarga de TEMP_DIR si el script falla antes,
+# pero en el camino feliz lo limpiamos aquí para no esperar al exit.
 rm -rf "${TEMP_DIR}"
+TEMP_DIR=""
 
 ok "Plugin instalado en ${INSTALL_DIR}"
 
@@ -160,12 +203,20 @@ if [ ! -f "${INSTALLED_FILE}" ]; then
 fi
 
 python3 - "${INSTALLED_FILE}" "${PLUGIN_NAME}@${PLUGIN_NAME}" "${INSTALL_DIR}" "${VERSION}" "${TIMESTAMP}" "${GIT_SHA}" <<'PYEOF'
-import json, sys
+import json, os, sys, tempfile
 
 installed_file, plugin_key, install_path, version, timestamp, git_sha = sys.argv[1:7]
 
-with open(installed_file, 'r') as f:
-    data = json.load(f)
+try:
+    with open(installed_file, 'r') as f:
+        data = json.load(f)
+except json.JSONDecodeError as e:
+    print(f"Error: '{installed_file}' contiene JSON inválido: {e}", file=sys.stderr)
+    print(f"Puedes restaurarlo con: echo '{{\"version\":2,\"plugins\":{{}}}}' > {installed_file}", file=sys.stderr)
+    sys.exit(1)
+except OSError as e:
+    print(f"Error: no se pudo leer '{installed_file}': {e}", file=sys.stderr)
+    sys.exit(1)
 
 if 'plugins' not in data:
     data['plugins'] = {}
@@ -179,8 +230,19 @@ data['plugins'][plugin_key] = [{
     'gitCommitSha': git_sha
 }]
 
-with open(installed_file, 'w') as f:
-    json.dump(data, f, indent=2)
+# Escritura atómica: fichero temporal + rename
+try:
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=os.path.dirname(installed_file))
+    with os.fdopen(tmp_fd, 'w') as f:
+        json.dump(data, f, indent=2)
+    os.replace(tmp_path, installed_file)
+except OSError as e:
+    print(f"Error: no se pudo escribir '{installed_file}': {e}", file=sys.stderr)
+    try:
+        os.unlink(tmp_path)
+    except OSError:
+        pass
+    sys.exit(1)
 PYEOF
 
 ok "Plugin registrado en installed_plugins.json"
@@ -189,30 +251,48 @@ ok "Plugin registrado en installed_plugins.json"
 
 if [ -f "${SETTINGS_FILE}" ]; then
     python3 - "${SETTINGS_FILE}" "${PLUGIN_NAME}@${PLUGIN_NAME}" <<'PYEOF'
-import json, sys
+import json, os, sys, tempfile
 
 settings_file, plugin_key = sys.argv[1:3]
 
-with open(settings_file, 'r') as f:
-    data = json.load(f)
+try:
+    with open(settings_file, 'r') as f:
+        data = json.load(f)
+except json.JSONDecodeError as e:
+    print(f"Error: '{settings_file}' contiene JSON inválido: {e}", file=sys.stderr)
+    sys.exit(1)
+except OSError as e:
+    print(f"Error: no se pudo leer '{settings_file}': {e}", file=sys.stderr)
+    sys.exit(1)
 
 if 'enabledPlugins' not in data:
     data['enabledPlugins'] = {}
 
 data['enabledPlugins'][plugin_key] = True
 
-with open(settings_file, 'w') as f:
-    json.dump(data, f, indent=2)
+# Escritura atómica: fichero temporal + rename
+try:
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=os.path.dirname(settings_file))
+    with os.fdopen(tmp_fd, 'w') as f:
+        json.dump(data, f, indent=2)
+    os.replace(tmp_path, settings_file)
+except OSError as e:
+    print(f"Error: no se pudo escribir '{settings_file}': {e}", file=sys.stderr)
+    try:
+        os.unlink(tmp_path)
+    except OSError:
+        pass
+    sys.exit(1)
 PYEOF
     ok "Plugin habilitado en settings.json"
 else
-    info "No se encontro settings.json (se habilitara al iniciar Claude Code)"
+    info "No se encontró settings.json (se habilitará al iniciar Claude Code)"
 fi
 
 # -- Resultado --------------------------------------------------------------
 
-printf "\n${GREEN}${BOLD}Instalacion completada${NC}\n\n"
+printf "\n${GREEN}${BOLD}Instalación completada${NC}\n\n"
 printf "  Reinicia Claude Code y ejecuta:\n"
 printf "  ${BOLD}/alfred help${NC}\n\n"
 printf "  ${DIM}Repositorio: https://github.com/${REPO}${NC}\n"
-printf "  ${DIM}Documentacion: https://686f6c61.github.io/Claude-JARVIS-dev/${NC}\n\n"
+printf "  ${DIM}Documentación: https://686f6c61.github.io/Claude-JARVIS-dev/${NC}\n\n"

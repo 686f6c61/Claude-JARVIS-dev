@@ -8,18 +8,18 @@
 ## Componente principal
 
 - **Nombre:** {{nombre_proyecto}}
-- **Version:** {{version}}
+- **Versión:** {{version}}
 - **Licencia:** {{licencia}}
 
 ## Dependencias directas
 
-| Componente | Version | Licencia | Proveedor | Hash |
+| Componente | Versión | Licencia | Proveedor | Hash |
 |------------|---------|----------|-----------|------|
 | {{dep_1}} | {{ver_1}} | {{lic_1}} | {{prov_1}} | {{hash_1}} |
 
 ## Dependencias transitivas
 
-| Componente | Version | Licencia | Requerido por |
+| Componente | Versión | Licencia | Requerido por |
 |------------|---------|----------|---------------|
 | {{tdep_1}} | {{tver_1}} | {{tlic_1}} | {{treq_1}} |
 
@@ -39,5 +39,5 @@
 
 - [ ] Todos los componentes identificados
 - [ ] Versiones actualizadas
-- [ ] Sin vulnerabilidades criticas pendientes
+- [ ] Sin vulnerabilidades críticas pendientes
 - [ ] Licencias compatibles verificadas

@@ -7,9 +7,9 @@ description: "Usar para generar Dockerfile optimizado"
 
 ## Resumen
 
-Este skill genera un Dockerfile siguiendo las mejores practicas de la industria: multi-stage builds para reducir el tamano de la imagen final, ejecucion con usuario no-root para seguridad, capas optimizadas para aprovechar la cache y health checks para la orquestacion.
+Este skill genera un Dockerfile siguiendo las mejores prácticas de la industria: multi-stage builds para reducir el tamaño de la imagen final, ejecución con usuario no-root para seguridad, capas optimizadas para aprovechar la caché y health checks para la orquestación.
 
-Un buen Dockerfile no es solo "que funcione", sino que sea seguro, rapido de construir, pequeno y mantenible.
+Un buen Dockerfile no es solo "que funcione", sino que sea seguro, rápido de construir, pequeño y mantenible.
 
 ## Proceso
 
@@ -20,10 +20,10 @@ Un buen Dockerfile no es solo "que funcione", sino que sea seguro, rapido de con
    - Rust: multi-stage con `rust:XX` para build y `debian:XX-slim` o `gcr.io/distroless` para runtime.
    - Go: multi-stage con `golang:XX` para build y `scratch` o `gcr.io/distroless` para runtime.
 
-2. **Disenar multi-stage build.** Separar la fase de construccion de la de ejecucion:
+2. **Diseñar multi-stage build.** Separar la fase de construcción de la de ejecución:
 
    ```dockerfile
-   # Fase de build: incluye herramientas de compilacion
+   # Fase de build: incluye herramientas de compilación
    FROM node:20-alpine AS builder
    WORKDIR /app
    COPY package*.json ./
@@ -38,23 +38,23 @@ Un buen Dockerfile no es solo "que funcione", sino que sea seguro, rapido de con
    COPY --from=builder /app/node_modules ./node_modules
    ```
 
-3. **Optimizar el orden de capas para cache.** Las capas que cambian menos van primero:
+3. **Optimizar el orden de capas para caché.** Las capas que cambian menos van primero:
 
    - Primero: ficheros de dependencias (package.json, requirements.txt, Cargo.toml).
-   - Segundo: instalacion de dependencias.
-   - Tercero: copia del codigo fuente.
+   - Segundo: instalación de dependencias.
+   - Tercero: copia del código fuente.
    - Cuarto: build.
 
-   Esto asegura que un cambio en el codigo no invalida la cache de dependencias.
+   Esto asegura que un cambio en el código no invalida la caché de dependencias.
 
-4. **Configurar usuario no-root.** Nunca ejecutar la aplicacion como root dentro del contenedor:
+4. **Configurar usuario no-root.** Nunca ejecutar la aplicación como root dentro del contenedor:
 
    ```dockerfile
    RUN addgroup --system app && adduser --system --ingroup app app
    USER app
    ```
 
-5. **Anadir health check.** Permitir al orquestador (Docker Compose, Kubernetes) verificar que la aplicacion esta sana:
+5. **Añadir health check.** Permitir al orquestador (Docker Compose, Kubernetes) verificar que la aplicación está sana:
 
    ```dockerfile
    HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
@@ -72,16 +72,16 @@ Un buen Dockerfile no es solo "que funcione", sino que sea seguro, rapido de con
    .github/
    ```
 
-7. **Configurar variables de entorno.** Usar `ENV` para valores por defecto y documentar que variables se deben pasar en runtime con `ARG` o `-e`.
+7. **Configurar variables de entorno.** Usar `ENV` para valores por defecto y documentar qué variables se deben pasar en runtime con `ARG` o `-e`.
 
-8. **Verificar la imagen resultante.** Comprobar el tamano final, que no incluye herramientas de build innecesarias y que arranca correctamente.
+8. **Verificar la imagen resultante.** Comprobar el tamaño final, que no incluye herramientas de build innecesarias y que arranca correctamente.
 
-## Criterios de exito
+## Criterios de éxito
 
 - El Dockerfile usa multi-stage build.
-- La imagen base es minima (alpine, slim o distroless).
-- La aplicacion se ejecuta con usuario no-root.
-- Las capas estan ordenadas para maximizar el uso de cache.
+- La imagen base es mínima (alpine, slim o distroless).
+- La aplicación se ejecuta con usuario no-root.
+- Las capas están ordenadas para maximizar el uso de caché.
 - Hay un health check configurado.
 - Existe un .dockerignore que excluye ficheros innecesarios.
-- La imagen final no incluye herramientas de build, tests ni codigo fuente innecesario.
+- La imagen final no incluye herramientas de build, tests ni código fuente innecesario.

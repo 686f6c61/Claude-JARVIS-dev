@@ -7,8 +7,8 @@ Intercepta las operaciones de escritura sobre ficheros de dependencias
 con la voz de "El Paranoico" para que el usuario sea consciente de que
 se han modificado las dependencias del proyecto.
 
-No bloquea la operacion (exit 0 siempre), solo avisa. La idea es que
-cualquier cambio en dependencias reciba atencion explicita porque cada
+No bloquea la operación (exit 0 siempre), solo avisa. La idea es que
+cualquier cambio en dependencias reciba atención explícita porque cada
 nueva dependencia es una superficie de ataque adicional.
 """
 
@@ -19,7 +19,7 @@ import sys
 # --- Ficheros de dependencias conocidos ---
 
 # Conjunto de nombres de fichero (sin ruta) que contienen declaraciones
-# de dependencias en los ecosistemas mas comunes. Se comprueba el nombre
+# de dependencias en los ecosistemas más comunes. Se comprueba el nombre
 # base del fichero para ser independiente de la ruta.
 DEPENDENCY_FILES = {
     # Node.js / JavaScript / TypeScript
@@ -71,7 +71,7 @@ def is_dependency_file(file_path: str) -> bool:
     """Determina si una ruta corresponde a un fichero de dependencias.
 
     Comprueba el nombre base del fichero (sin directorio) contra el
-    conjunto de nombres conocidos. Tambien detecta ficheros requirements
+    conjunto de nombres conocidos. También detecta ficheros requirements
     con sufijos arbitrarios (requirements-*.txt).
 
     Args:
@@ -82,11 +82,11 @@ def is_dependency_file(file_path: str) -> bool:
     """
     basename = os.path.basename(file_path)
 
-    # Comprobacion directa contra nombres conocidos
+    # Comprobación directa contra nombres conocidos
     if basename in DEPENDENCY_FILES:
         return True
 
-    # Patron flexible para requirements-*.txt (ej: requirements-ci.txt)
+    # Patrón flexible para requirements-*.txt (ej.: requirements-ci.txt)
     if basename.startswith("requirements") and basename.endswith(".txt"):
         return True
 
@@ -106,17 +106,17 @@ def main():
     """
     try:
         data = json.load(sys.stdin)
-    except (json.JSONDecodeError, ValueError) as e:
+    except ValueError as e:
         print(
             f"[dependency-watch] Aviso: no se pudo leer la entrada del hook: {e}. "
-            f"La vigilancia de dependencias esta desactivada para esta operacion.",
+            f"La vigilancia de dependencias está desactivada para esta operación.",
             file=sys.stderr,
         )
         sys.exit(0)
 
     tool_input = data.get("tool_input", {})
 
-    # Extraer la ruta del fichero segun la herramienta usada
+    # Extraer la ruta del fichero según la herramienta usada
     file_path = tool_input.get("file_path", "") or tool_input.get("path", "")
 
     if not file_path:
@@ -135,12 +135,12 @@ def main():
         f"Se ha modificado un fichero de dependencias. Cada nueva dependencia\n"
         f"es una superficie de ataque que aceptas de ojos cerrados.\n"
         f"\n"
-        f"Antes de seguir, preguntate:\n"
+        f"Antes de seguir, pregúntate:\n"
         f"  - Es realmente necesaria esta dependencia?\n"
-        f"  - Quien la mantiene? Tiene actividad reciente?\n"
-        f"  - Que permisos pide? Cuantas dependencias transitivas arrastra?\n"
+        f"  - Quién la mantiene? Tiene actividad reciente?\n"
+        f"  - Qué permisos pide? Cuántas dependencias transitivas arrastra?\n"
         f"\n"
-        f"Has pensado en los ataques de supply chain? Porque yo si.\n",
+        f"Has pensado en los ataques de supply chain? Porque yo sí.\n",
         file=sys.stderr,
     )
 

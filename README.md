@@ -1,28 +1,28 @@
 # Alfred Dev
 
-**Plugin de ingenieria de software automatizada para [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
+**Plugin de ingeniería de software automatizada para [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
 
-8 agentes especializados con personalidad propia, 29 skills organizados en 7 dominios, 5 flujos de trabajo con quality gates infranqueables y compliance europeo (RGPD, NIS2, CRA) integrado desde el diseno.
+8 agentes especializados con personalidad propia, 29 skills organizados en 7 dominios, 5 flujos de trabajo con quality gates infranqueables y compliance europeo (RGPD, NIS2, CRA) integrado desde el diseño.
 
-[Documentacion completa](https://686f6c61.github.io/Claude-JARVIS-dev/) -- [Instalar](#instalacion) -- [Comandos](#comandos) -- [Arquitectura](#arquitectura)
+[Documentación completa](https://686f6c61.github.io/Claude-JARVIS-dev/) -- [Instalar](#instalación) -- [Comandos](#comandos) -- [Arquitectura](#arquitectura)
 
 ---
 
-## Que es Alfred Dev
+## Qué es Alfred Dev
 
-Alfred Dev es un plugin que orquesta el ciclo completo de desarrollo de software a traves de agentes autonomos. Cada agente tiene un rol concreto, un ambito de actuacion delimitado y quality gates que impiden avanzar a la siguiente fase sin cumplir los criterios de calidad. El sistema esta disenado para que ningun artefacto llegue a produccion sin haber pasado por producto, arquitectura, desarrollo con TDD, revision de seguridad, QA y documentacion.
+Alfred Dev es un plugin que orquesta el ciclo completo de desarrollo de software a través de agentes autónomos. Cada agente tiene un rol concreto, un ámbito de actuación delimitado y quality gates que impiden avanzar a la siguiente fase sin cumplir los criterios de calidad. El sistema está diseñado para que ningún artefacto llegue a producción sin haber pasado por producto, arquitectura, desarrollo con TDD, revisión de seguridad, QA y documentación.
 
-El plugin detecta automaticamente el stack tecnologico del proyecto (Node.js, Python, Rust, Go, Ruby, Elixir, Java/Kotlin, PHP, C#/.NET, Swift) y adapta los artefactos generados al ecosistema real: frameworks, gestores de paquetes, convenciones de testing y estructura de directorios.
+El plugin detecta automáticamente el stack tecnológico del proyecto (Node.js, Python, Rust, Go, Ruby, Elixir, Java/Kotlin, PHP, C#/.NET, Swift) y adapta los artefactos generados al ecosistema real: frameworks, gestores de paquetes, convenciones de testing y estructura de directorios.
 
-## Instalacion
+## Instalación
 
-Una sola linea. El script clona el repositorio en la cache de plugins de Claude Code y lo registra automaticamente:
+Una sola línea. El script clona el repositorio en la caché de plugins de Claude Code y lo registra automáticamente:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash
 ```
 
-Reinicia Claude Code despues de instalar y verifica con:
+Reinicia Claude Code después de instalar y verifica con:
 
 ```bash
 /alfred help
@@ -41,57 +41,57 @@ curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/uni
 
 ## Comandos
 
-Toda la interfaz se controla desde la linea de comandos de Claude Code con el prefijo `/alfred`:
+Toda la interfaz se controla desde la línea de comandos de Claude Code con el prefijo `/alfred`:
 
-| Comando | Descripcion |
+| Comando | Descripción |
 |---------|-------------|
-| `/alfred feature <desc>` | Ciclo completo de 6 fases o parcial. Alfred pregunta desde que fase arrancar. |
-| `/alfred fix <desc>` | Correccion de bugs con flujo de 3 fases: diagnostico, correccion TDD, validacion. |
-| `/alfred spike <tema>` | Investigacion tecnica sin compromiso: prototipos, benchmarks, documento de hallazgos. |
-| `/alfred ship` | Release: auditoria final paralela, changelog, versionado semantico, despliegue. |
-| `/alfred audit` | Auditoria completa con 4 agentes en paralelo: calidad, seguridad, arquitectura, documentacion. |
-| `/alfred config` | Configurar autonomia, stack, compliance y personalidad del equipo. |
-| `/alfred status` | Fase actual, fases completadas con duracion, gate pendiente y agente activo. |
+| `/alfred feature <desc>` | Ciclo completo de 6 fases o parcial. Alfred pregunta desde qué fase arrancar. |
+| `/alfred fix <desc>` | Corrección de bugs con flujo de 3 fases: diagnóstico, corrección TDD, validación. |
+| `/alfred spike <tema>` | Investigación técnica sin compromiso: prototipos, benchmarks, documento de hallazgos. |
+| `/alfred ship` | Release: auditoría final paralela, changelog, versionado semántico, despliegue. |
+| `/alfred audit` | Auditoría completa con 4 agentes en paralelo: calidad, seguridad, arquitectura, documentación. |
+| `/alfred config` | Configurar autonomía, stack, compliance y personalidad del equipo. |
+| `/alfred status` | Fase actual, fases completadas con duración, gate pendiente y agente activo. |
 | `/alfred help` | Referencia completa de comandos, agentes y flujos. |
 
 ### Ejemplo de uso
 
 ```
-> /alfred feature sistema de autenticacion con OAuth2
+> /alfred feature sistema de autenticación con OAuth2
 
 Alfred activa el flujo de 6 fases:
-  1. Producto    -- PRD con historias de usuario y criterios de aceptacion
-  2. Arquitectura -- Diseno de componentes, ADRs, threat model en paralelo
-  3. Desarrollo  -- Implementacion TDD (rojo-verde-refactor)
+  1. Producto    -- PRD con historias de usuario y criterios de aceptación
+  2. Arquitectura -- Diseño de componentes, ADRs, threat model en paralelo
+  3. Desarrollo  -- Implementación TDD (rojo-verde-refactor)
   4. Calidad     -- Code review + OWASP scan + compliance check + SBOM
-  5. Documentacion -- API docs, guia de usuario, changelog
+  5. Documentación -- API docs, guía de usuario, changelog
   6. Entrega     -- Pipeline CI/CD, Docker, deploy
 
-Cada transicion entre fases requiere superar la quality gate correspondiente.
+Cada transición entre fases requiere superar la quality gate correspondiente.
 ```
 
 ## Arquitectura
 
 ### Agentes
 
-El plugin implementa 8 agentes, cada uno con un system prompt especializado, un conjunto de herramientas definido y un modelo asignado segun la complejidad de su tarea:
+El plugin implementa 8 agentes, cada uno con un system prompt especializado, un conjunto de herramientas definido y un modelo asignado según la complejidad de su tarea:
 
 | Agente | Rol | Modelo | Responsabilidad |
 |--------|-----|--------|-----------------|
-| **Alfred** | Orquestador | opus | Coordina flujos, activa agentes, evalua gates entre fases |
-| **El buscador de problemas** | Product Owner | opus | PRDs, historias de usuario, criterios de aceptacion, analisis competitivo |
-| **El dibujante de cajas** | Arquitecto | opus | Diseno de sistemas, ADRs, diagramas Mermaid, matrices de decision |
-| **El artesano** | Senior Dev | opus | Implementacion TDD estricto, refactoring, commits atomicos |
+| **Alfred** | Orquestador | opus | Coordina flujos, activa agentes, evalúa gates entre fases |
+| **El buscador de problemas** | Product Owner | opus | PRDs, historias de usuario, criterios de aceptación, análisis competitivo |
+| **El dibujante de cajas** | Arquitecto | opus | Diseño de sistemas, ADRs, diagramas Mermaid, matrices de decisión |
+| **El artesano** | Senior Dev | opus | Implementación TDD estricto, refactoring, commits atómicos |
 | **El paranoico** | Security Officer | opus | OWASP Top 10, threat modeling STRIDE, SBOM, compliance RGPD/NIS2/CRA |
-| **El rompe-cosas** | QA Engineer | sonnet | Test plans, code review, testing exploratorio, regresion |
+| **El rompe-cosas** | QA Engineer | sonnet | Test plans, code review, testing exploratorio, regresión |
 | **El fontanero** | DevOps Engineer | sonnet | Docker multi-stage, CI/CD, deploy, monitoring, observabilidad |
-| **El traductor** | Tech Writer | sonnet | Documentacion de API, arquitectura, guias de usuario, changelogs |
+| **El traductor** | Tech Writer | sonnet | Documentación de API, arquitectura, guías de usuario, changelogs |
 
-Los agentes con modelo `opus` realizan tareas que requieren razonamiento complejo (diseno, seguridad, implementacion). Los agentes con modelo `sonnet` cubren tareas estructuradas con patrones mas predecibles (QA, infra, documentacion).
+Los agentes con modelo `opus` realizan tareas que requieren razonamiento complejo (diseño, seguridad, implementación). Los agentes con modelo `sonnet` cubren tareas estructuradas con patrones más predecibles (QA, infra, documentación).
 
 ### Skills (29)
 
-Cada skill es una habilidad concreta que un agente ejecuta. Estan organizados por dominio:
+Cada skill es una habilidad concreta que un agente ejecuta. Están organizados por dominio:
 
 ```
 skills/
@@ -101,19 +101,19 @@ skills/
   seguridad/         -- threat-model, dependency-audit, security-review, compliance-check, sbom-generate
   calidad/           -- test-plan, code-review, exploratory-testing, regression-check
   devops/            -- dockerize, ci-cd-pipeline, deploy-config, monitoring-setup
-  documentacion/     -- api-docs, architecture-docs, user-guide, changelog
+  documentación/     -- api-docs, architecture-docs, user-guide, changelog
 ```
 
 ### Hooks (5)
 
-Los hooks interceptan eventos del ciclo de vida de Claude Code para aplicar validaciones automaticas:
+Los hooks interceptan eventos del ciclo de vida de Claude Code para aplicar validaciones automáticas:
 
-| Hook | Evento | Funcion |
+| Hook | Evento | Función |
 |------|--------|---------|
-| `session-start.sh` | `SessionStart` | Detecta stack tecnologico e inicializa el contexto de sesion |
-| `stop-hook.py` | `Stop` | Genera resumen de sesion con fases completadas y pendientes |
+| `session-start.sh` | `SessionStart` | Detecta stack tecnológico e inicializa el contexto de sesión |
+| `stop-hook.py` | `Stop` | Genera resumen de sesión con fases completadas y pendientes |
 | `secret-guard.sh` | `PreToolUse` (Write/Edit) | Bloquea escritura de secretos (API keys, tokens, passwords) |
-| `quality-gate.py` | `PostToolUse` (Bash) | Verifica que los tests pasen despues de ejecuciones de Bash |
+| `quality-gate.py` | `PostToolUse` (Bash) | Verifica que los tests pasen después de ejecuciones de Bash |
 | `dependency-watch.py` | `PostToolUse` (Write/Edit) | Detecta dependencias nuevas y notifica al security officer |
 
 ### Templates (7)
@@ -128,15 +128,15 @@ Plantillas estandarizadas que los agentes usan para generar artefactos con estru
 - `changelog-entry.md` -- Entrada de changelog (Keep a Changelog)
 - `release-notes.md` -- Notas de release con resumen ejecutivo
 
-### Core (3 modulos, ~1.400 lineas)
+### Core (3 módulos, ~1.400 líneas)
 
-El nucleo del plugin esta implementado en Python con tests unitarios:
+El núcleo del plugin está implementado en Python con tests unitarios:
 
-| Modulo | Lineas | Funcion |
+| Módulo | Líneas | Función |
 |--------|--------|---------|
-| `orchestrator.py` | ~600 | Maquina de estados de flujos, gestion de sesiones, evaluacion de gates |
+| `orchestrator.py` | ~600 | Máquina de estados de flujos, gestión de sesiones, evaluación de gates |
 | `personality.py` | ~400 | Motor de personalidad: frases, tono, anuncios, formato de veredicto |
-| `config_loader.py` | ~400 | Carga de configuracion, deteccion de stack, preferencias de proyecto |
+| `config_loader.py` | ~400 | Carga de configuración, detección de stack, preferencias de proyecto |
 
 ```bash
 # Ejecutar tests
@@ -145,34 +145,34 @@ python3 -m pytest tests/ -v
 
 ## Quality gates
 
-Las quality gates son puntos de control infranqueables entre fases. Si una gate no se supera, el flujo se detiene. No hay excepciones, no hay modo de saltarselas:
+Las quality gates son puntos de control infranqueables entre fases. Si una gate no se supera, el flujo se detiene. No hay excepciones, no hay modo de saltárselas:
 
-| Gate | Condicion |
+| Gate | Condición |
 |------|-----------|
 | PRD aprobado | El usuario valida el PRD antes de pasar a arquitectura |
-| Diseno aprobado | El usuario aprueba el diseno Y el security officer lo valida |
+| Diseño aprobado | El usuario aprueba el diseño Y el security officer lo valida |
 | Tests en verde | Todos los tests pasan antes de pasar a calidad |
 | QA + seguridad | El QA engineer y el security officer aprueban en paralelo |
-| Documentacion completa | Todos los artefactos estan documentados |
+| Documentación completa | Todos los artefactos están documentados |
 | Pipeline verde | CI/CD verde, sin usuario root en contenedor, sin secretos en imagen |
 
-Cada gate produce un veredicto formal: **APROBADO**, **APROBADO CON CONDICIONES** o **RECHAZADO**, con hallazgos bloqueantes y proxima accion recomendada.
+Cada gate produce un veredicto formal: **APROBADO**, **APROBADO CON CONDICIONES** o **RECHAZADO**, con hallazgos bloqueantes y próxima acción recomendada.
 
 ## Compliance
 
 El plugin integra verificaciones de compliance europeo en el flujo de desarrollo:
 
-- **RGPD** -- Proteccion de datos desde el diseno. Verificacion de base legal, minimizacion de datos, derechos de los interesados.
-- **NIS2** -- Directiva de ciberseguridad para operadores esenciales. Gestion de riesgos, notificacion de incidentes, cadena de suministro.
+- **RGPD** -- Protección de datos desde el diseño. Verificación de base legal, minimización de datos, derechos de los interesados.
+- **NIS2** -- Directiva de ciberseguridad para operadores esenciales. Gestión de riesgos, notificación de incidentes, cadena de suministro.
 - **CRA** -- Cyber Resilience Act. Requisitos de ciber-resiliencia para productos digitales con componentes conectados.
-- **OWASP Top 10** -- Verificacion sistematica de las 10 vulnerabilidades mas explotadas en cada revision de seguridad.
-- **SBOM** -- Generacion automatica del Software Bill of Materials con inventario de dependencias, licencias y CVEs conocidos.
+- **OWASP Top 10** -- Verificación sistemática de las 10 vulnerabilidades más explotadas en cada revisión de seguridad.
+- **SBOM** -- Generación automática del Software Bill of Materials con inventario de dependencias, licencias y CVEs conocidos.
 
-## Deteccion de stack
+## Detección de stack
 
-El hook `session-start.sh` analiza el directorio de trabajo al iniciar sesion y detecta automaticamente:
+El hook `session-start.sh` analiza el directorio de trabajo al iniciar sesión y detecta automáticamente:
 
-| Lenguaje | Senales | Ecosistema |
+| Lenguaje | Señales | Ecosistema |
 |----------|---------|------------|
 | Node.js | `package.json` | npm, pnpm, bun, yarn -- Express, Next.js, Fastify, Hono |
 | Python | `pyproject.toml`, `requirements.txt` | pip, poetry, uv -- Django, Flask, FastAPI |
@@ -196,16 +196,16 @@ alfred-dev/
   commands/               # 8 comandos /alfred
   skills/                 # 29 skills en 7 dominios
   hooks/                  # 5 hooks del ciclo de vida
-    hooks.json            # Configuracion de eventos
-  core/                   # Motor de orquestacion (Python)
+    hooks.json            # Configuración de eventos
+  core/                   # Motor de orquestación (Python)
   templates/              # 7 plantillas de artefactos
   tests/                  # Tests unitarios (pytest)
   site/                   # Landing page para GitHub Pages
 ```
 
-## Configuracion
+## Configuración
 
-El plugin se puede configurar por proyecto creando el fichero `.claude/alfred-dev.local.md` en la raiz del proyecto:
+El plugin se puede configurar por proyecto creando el fichero `.claude/alfred-dev.local.md` en la raíz del proyecto:
 
 ```yaml
 ---
@@ -227,4 +227,4 @@ MIT
 
 ---
 
-[Documentacion completa](https://686f6c61.github.io/Claude-JARVIS-dev/) | [Codigo fuente](https://github.com/686f6c61/Claude-JARVIS-dev)
+[Documentación completa](https://686f6c61.github.io/Claude-JARVIS-dev/) | [Código fuente](https://github.com/686f6c61/Claude-JARVIS-dev)

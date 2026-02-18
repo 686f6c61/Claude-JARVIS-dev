@@ -7,11 +7,11 @@ description: "Usar para configurar observabilidad del servicio"
 
 ## Resumen
 
-Este skill configura las tres patas de la observabilidad: logging estructurado, error tracking y metricas. Sin observabilidad, operar un servicio en produccion es como conducir de noche sin luces: todo va bien hasta que no. El objetivo es poder responder a tres preguntas fundamentales: que esta pasando ahora, que ha pasado antes y por que algo falla.
+Este skill configura las tres patas de la observabilidad: logging estructurado, error tracking y métricas. Sin observabilidad, operar un servicio en producción es como conducir de noche sin luces: todo va bien hasta que no. El objetivo es poder responder a tres preguntas fundamentales: qué está pasando ahora, qué ha pasado antes y por qué algo falla.
 
 ## Proceso
 
-1. **Configurar logging estructurado.** Los logs en texto plano son dificiles de buscar y analizar. Usar JSON como formato estandar:
+1. **Configurar logging estructurado.** Los logs en texto plano son difíciles de buscar y analizar. Usar JSON como formato estándar:
 
    ```json
    {
@@ -32,46 +32,46 @@ Este skill configura las tres patas de la observabilidad: logging estructurado, 
    Principios del logging:
 
    - Cada entrada tiene timestamp, nivel, mensaje y contexto.
-   - Los request IDs permiten trazar un flujo a traves de multiples servicios.
-   - Los datos sensibles (contrasenas, tokens, datos personales) NUNCA aparecen en logs.
-   - Niveles: `debug` (desarrollo), `info` (flujo normal), `warn` (situacion inusual), `error` (algo fallo).
+   - Los request IDs permiten trazar un flujo a través de múltiples servicios.
+   - Los datos sensibles (contraseñas, tokens, datos personales) NUNCA aparecen en logs.
+   - Niveles: `debug` (desarrollo), `info` (flujo normal), `warn` (situación inusual), `error` (algo falló).
 
 2. **Configurar error tracking.** Herramientas como Sentry, Bugsnag o Rollbar proporcionan contexto rico para cada error:
 
-   - Instalacion del SDK en la aplicacion.
-   - Configuracion del DSN (endpoint de reporte).
+   - Instalación del SDK en la aplicación.
+   - Configuración del DSN (endpoint de reporte).
    - Source maps para errores de frontend (si aplica).
-   - Agrupacion de errores para evitar ruido.
+   - Agrupación de errores para evitar ruido.
    - Alertas para errores nuevos o con picos de frecuencia.
-   - Integracion con el sistema de issues (GitHub, Jira) para seguimiento.
+   - Integración con el sistema de issues (GitHub, Jira) para seguimiento.
 
-3. **Definir metricas de negocio y tecnicas.** Las metricas cuentan la historia del sistema en numeros:
+3. **Definir métricas de negocio y técnicas.** Las métricas cuentan la historia del sistema en números:
 
-   - **Tecnicas:** latencia de requests (p50, p95, p99), tasa de error, uso de CPU/memoria, conexiones a base de datos.
-   - **Negocio:** registros por hora, transacciones completadas, tasa de conversion, usuarios activos.
+   - **Técnicas:** latencia de requests (p50, p95, p99), tasa de error, uso de CPU/memoria, conexiones a base de datos.
+   - **Negocio:** registros por hora, transacciones completadas, tasa de conversión, usuarios activos.
 
-   Las metricas de negocio son las que mas interesan al equipo de producto; las tecnicas son las que interesan a operaciones.
+   Las métricas de negocio son las que más interesan al equipo de producto; las técnicas son las que interesan a operaciones.
 
 4. **Configurar alertas.** Las alertas deben ser accionables, no ruidosas:
 
-   - **Critica:** el servicio esta caido o perdiendo datos. Requiere accion inmediata (pagina al ingeniero de guardia).
-   - **Alta:** tasa de error elevada o degradacion significativa. Requiere atencion en la proxima hora.
-   - **Media:** tendencia preocupante que no requiere accion inmediata. Revisar en el proximo dia laborable.
+   - **Crítica:** el servicio está caído o perdiendo datos. Requiere acción inmediata (pagina al ingeniero de guardia).
+   - **Alta:** tasa de error elevada o degradación significativa. Requiere atención en la próxima hora.
+   - **Media:** tendencia preocupante que no requiere acción inmediata. Revisar en el próximo día laborable.
 
-   Evitar alertas que nadie mira. Si una alerta se ignora sistematicamente, o se elimina o se ajusta su umbral.
+   Evitar alertas que nadie mira. Si una alerta se ignora sistemáticamente, o se elimina o se ajusta su umbral.
 
-5. **Implementar health endpoints.** La aplicacion debe exponer su estado de salud:
+5. **Implementar health endpoints.** La aplicación debe exponer su estado de salud:
 
-   - `GET /health`: responde 200 si la aplicacion esta corriendo (liveness).
-   - `GET /ready`: responde 200 si la aplicacion puede procesar requests (readiness). Incluye verificacion de dependencias criticas (base de datos, cache).
+   - `GET /health`: responde 200 si la aplicación está corriendo (liveness).
+   - `GET /ready`: responde 200 si la aplicación puede procesar requests (readiness). Incluye verificación de dependencias críticas (base de datos, caché).
 
-6. **Documentar la configuracion.** Dejar claro donde se visualizan los logs, como se accede al error tracking y que dashboards estan disponibles.
+6. **Documentar la configuración.** Dejar claro dónde se visualizan los logs, cómo se accede al error tracking y qué dashboards están disponibles.
 
-## Criterios de exito
+## Criterios de éxito
 
 - Los logs son estructurados (JSON) con timestamp, nivel, mensaje y contexto.
 - No hay datos sensibles en los logs.
-- El error tracking esta integrado y agrupa errores correctamente.
-- Las metricas cubren al menos latencia, tasa de error y una metrica de negocio.
-- Las alertas son accionables y estan clasificadas por severidad.
-- Los health endpoints estan implementados y responden correctamente.
+- El error tracking está integrado y agrupa errores correctamente.
+- Las métricas cubren al menos latencia, tasa de error y una métrica de negocio.
+- Las alertas son accionables y están clasificadas por severidad.
+- Los health endpoints están implementados y responden correctamente.

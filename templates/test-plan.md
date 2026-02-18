@@ -2,7 +2,7 @@
 
 **Fecha:** {{fecha}}
 **Autor:** qa-engineer
-**Version:** {{version}}
+**Versión:** {{version}}
 
 ## Alcance
 
@@ -13,10 +13,10 @@
 | Tipo | Cobertura | Herramienta |
 |------|-----------|-------------|
 | Unitarios | {{cobertura_unit}} | {{herramienta_unit}} |
-| Integracion | {{cobertura_int}} | {{herramienta_int}} |
+| Integración | {{cobertura_int}} | {{herramienta_int}} |
 | E2E | {{cobertura_e2e}} | {{herramienta_e2e}} |
 
-## Escenarios criticos (prioridad alta)
+## Escenarios críticos (prioridad alta)
 
 {{escenarios_criticos}}
 
@@ -38,7 +38,7 @@
 
 ## Criterios de paso
 
-- [ ] Todos los tests criticos pasan
-- [ ] Cobertura minima: {{porcentaje_cobertura}}%
+- [ ] Todos los tests críticos pasan
+- [ ] Cobertura mínima: {{porcentaje_cobertura}}%
 - [ ] Sin regresiones detectadas
 - [ ] Security review aprobado

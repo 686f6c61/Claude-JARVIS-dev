@@ -7,13 +7,13 @@ description: "Usar para configurar pipeline CI/CD adaptado al proyecto"
 
 ## Resumen
 
-Este skill genera la configuracion de un pipeline de integracion y despliegue continuo adaptado al stack y la plataforma del proyecto. El pipeline automatiza las verificaciones de calidad (lint, tests, seguridad) y el despliegue, eliminando pasos manuales propensos a error.
+Este skill genera la configuración de un pipeline de integración y despliegue continuo adaptado al stack y la plataforma del proyecto. El pipeline automatiza las verificaciones de calidad (lint, tests, seguridad) y el despliegue, eliminando pasos manuales propensos a error.
 
-Un buen pipeline es rapido (feedback en minutos, no en horas), fiable (no falla aleatoriamente) y seguro (no expone secretos ni permite despliegues sin verificacion).
+Un buen pipeline es rápido (feedback en minutos, no en horas), fiable (no falla aleatoriamente) y seguro (no expone secretos ni permite despliegues sin verificación).
 
 ## Proceso
 
-1. **Detectar la plataforma de CI/CD.** Identificar donde se ejecutara el pipeline:
+1. **Detectar la plataforma de CI/CD.** Identificar dónde se ejecutará el pipeline:
 
    - **GitHub Actions:** `.github/workflows/`.
    - **GitLab CI:** `.gitlab-ci.yml`.
@@ -23,51 +23,51 @@ Un buen pipeline es rapido (feedback en minutos, no en horas), fiable (no falla 
 
    Si no hay preferencia, recomendar GitHub Actions por su ecosistema y facilidad de uso.
 
-2. **Definir los stages del pipeline.** El orden estandar es:
+2. **Definir los stages del pipeline.** El orden estándar es:
 
-   | Stage | Proposito | Falla si... |
+   | Stage | Propósito | Falla si... |
    |-------|-----------|-------------|
-   | **Lint** | Verificar estilo y errores estaticos | Hay errores de linter |
-   | **Test** | Ejecutar tests unitarios e integracion | Algun test falla |
+   | **Lint** | Verificar estilo y errores estáticos | Hay errores de linter |
+   | **Test** | Ejecutar tests unitarios e integración | Algún test falla |
    | **Build** | Compilar/construir el artefacto | La build falla |
-   | **Security** | Escanear vulnerabilidades | Hay CVE criticos o altos |
+   | **Security** | Escanear vulnerabilidades | Hay CVE críticos o altos |
    | **Deploy** | Desplegar al entorno objetivo | El despliegue falla |
 
-3. **Configurar cache de dependencias.** Evitar descargar las mismas dependencias en cada ejecucion:
+3. **Configurar caché de dependencias.** Evitar descargar las mismas dependencias en cada ejecución:
 
    - Node.js: cachear `node_modules` con key basada en `package-lock.json`.
    - Python: cachear el directorio de pip con key basada en `requirements.txt`.
    - Rust: cachear `target/` y el directorio de cargo.
 
-4. **Gestionar secretos.** Los secretos (tokens, contrasenas, API keys) nunca van en el codigo:
+4. **Gestionar secretos.** Los secretos (tokens, contraseñas, API keys) nunca van en el código:
 
    - Usar el sistema de secretos de la plataforma (GitHub Secrets, GitLab Variables, etc.).
    - Referenciar como variables de entorno en el pipeline.
-   - Documentar que secretos son necesarios y donde se configuran.
+   - Documentar qué secretos son necesarios y dónde se configuran.
 
-5. **Configurar triggers.** Definir cuando se ejecuta el pipeline:
+5. **Configurar triggers.** Definir cuándo se ejecuta el pipeline:
 
    - Push a ramas principales (main, develop): pipeline completo.
    - Pull requests: lint + test + build (sin deploy).
-   - Tags de version: pipeline completo con deploy a produccion.
+   - Tags de versión: pipeline completo con deploy a producción.
 
-6. **Configurar notificaciones de fallo.** El equipo debe enterarse rapidamente cuando algo falla:
+6. **Configurar notificaciones de fallo.** El equipo debe enterarse rápidamente cuando algo falla:
 
-   - Notificacion a Slack, email o similar cuando un stage falla.
-   - Indicar que stage fallo y enlace al log.
+   - Notificación a Slack, email o similar cuando un stage falla.
+   - Indicar qué stage falló y enlace al log.
 
-7. **Configurar estrategia de deploy.** Segun el entorno:
+7. **Configurar estrategia de deploy.** Según el entorno:
 
-   - Staging: deploy automatico en cada merge a develop.
-   - Produccion: deploy manual o automatico en cada tag de version, segun la preferencia del equipo.
+   - Staging: deploy automático en cada merge a develop.
+   - Producción: deploy manual o automático en cada tag de versión, según la preferencia del equipo.
 
-8. **Documentar el pipeline.** Anadir un comentario en el fichero de configuracion explicando cada stage y como anadir nuevos pasos.
+8. **Documentar el pipeline.** Añadir un comentario en el fichero de configuración explicando cada stage y cómo añadir nuevos pasos.
 
-## Criterios de exito
+## Criterios de éxito
 
 - El pipeline cubre lint, test, build, security y deploy.
-- Las dependencias se cachean para acelerar la ejecucion.
-- Los secretos se gestionan via variables de entorno de la plataforma, no en el codigo.
-- Los triggers estan configurados para PRs, pushes y tags.
+- Las dependencias se cachean para acelerar la ejecución.
+- Los secretos se gestionan vía variables de entorno de la plataforma, no en el código.
+- Los triggers están configurados para PRs, pushes y tags.
 - Hay notificaciones de fallo configuradas.
-- El fichero de configuracion esta documentado con comentarios.
+- El fichero de configuración está documentado con comentarios.

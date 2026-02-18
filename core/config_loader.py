@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Cargador de configuracion del plugin Alfred Dev.
+Cargador de configuración del plugin Alfred Dev.
 
-Este modulo se encarga de leer la configuracion del usuario desde un fichero
-.local.md con frontmatter YAML, detectar automaticamente el stack tecnologico
+Este módulo se encarga de leer la configuración del usuario desde un fichero
+.local.md con frontmatter YAML, detectar automáticamente el stack tecnológico
 del proyecto y fusionar todo con unos valores por defecto sensatos.
 
-El diseno busca funcionar sin dependencias externas: incluye un parser YAML
-basico como fallback para entornos donde PyYAML no este disponible.
+El diseño busca funcionar sin dependencias externas: incluye un parser YAML
+básico como fallback para entornos donde PyYAML no esté disponible.
 
-Funciones publicas:
-    - load_config(path): carga y fusiona configuracion desde un fichero .local.md
+Funciones públicas:
+    - load_config(path): carga y fusiona configuración desde un fichero .local.md
     - detect_stack(project_dir): detecta runtime, lenguaje, framework y ORM
 """
 
@@ -20,7 +20,7 @@ import re
 import copy
 import sys
 
-# Se intenta importar PyYAML; si no esta disponible, se usa el parser basico
+# Se intenta importar PyYAML; si no está disponible, se usa el parser básico
 try:
     import yaml
 
@@ -29,11 +29,11 @@ except ImportError:
     _HAS_YAML = False
 
 
-# --- Configuracion por defecto ---
+# --- Configuración por defecto ---
 # Estos valores representan el comportamiento base del plugin cuando el usuario
-# no ha definido ninguna preferencia. Cada seccion controla un aspecto distinto:
+# no ha definido ninguna preferencia. Cada sección controla un aspecto distinto:
 #
-# - autonomia: cuanto puede decidir el plugin por su cuenta
+# - autonomía: cuánto puede decidir el plugin por su cuenta
 # - proyecto: metadatos del proyecto (se rellenan con detect_stack)
 # - compliance: reglas de cumplimiento y estilo
 # - integraciones: servicios externos habilitados
@@ -43,10 +43,10 @@ except ImportError:
 DEFAULT_CONFIG = {
     "autonomia": {
         "producto": "interactivo",
-        "seguridad": "autonomo",
+        "seguridad": "autónomo",
         "refactor": "interactivo",
-        "docs": "autonomo",
-        "tests": "autonomo",
+        "docs": "autónomo",
+        "tests": "autónomo",
     },
     "proyecto": {
         "runtime": "desconocido",
@@ -77,20 +77,20 @@ DEFAULT_CONFIG = {
 
 def load_config(path):
     """
-    Carga la configuracion del plugin desde un fichero .local.md.
+    Carga la configuración del plugin desde un fichero .local.md.
 
     El fichero utiliza frontmatter YAML (delimitado por ---) para los valores
-    de configuracion y el cuerpo Markdown para notas en texto libre. Si el
+    de configuración y el cuerpo Markdown para notas en texto libre. Si el
     fichero no existe o no se puede leer, se devuelven los valores por defecto.
 
-    La fusion es recursiva: los valores del fichero sobreescriben solo las
+    La fusión es recursiva: los valores del fichero sobreescriben solo las
     claves que definen, manteniendo el resto de los defaults intactos.
 
     Args:
-        path: ruta absoluta o relativa al fichero de configuracion.
+        path: ruta absoluta o relativa al fichero de configuración.
 
     Returns:
-        dict con la configuracion fusionada. Siempre contiene todas las claves
+        dict con la configuración fusionada. Siempre contiene todas las claves
         de DEFAULT_CONFIG aunque el fichero no defina ninguna.
 
     Ejemplo:
@@ -111,7 +111,7 @@ def load_config(path):
     except (OSError, IOError) as e:
         print(
             f"[Alfred Dev] Aviso: no se pudo leer '{path}': {e}. "
-            f"Se usaran los valores por defecto.",
+            f"Se usarán los valores por defecto.",
             file=sys.stderr,
         )
         return config
@@ -122,9 +122,15 @@ def load_config(path):
         parsed = _parse_yaml(frontmatter)
         if isinstance(parsed, dict):
             config = _deep_merge(config, parsed)
+        elif parsed is not None:
+            print(
+                f"[Alfred Dev] Aviso: el frontmatter de '{path}' no es un diccionario. "
+                f"Se ignorará la configuración del fichero.",
+                file=sys.stderr,
+            )
 
     # Se extraen las notas del cuerpo Markdown.
-    # Se busca cualquier seccion cuyo titulo contenga "Notas" (h1-h6).
+    # Se busca cualquier sección cuyo título contenga "Notas" (h1-h6).
     # Todo el contenido desde esa cabecera hasta la siguiente cabecera
     # del mismo nivel o hasta el final del documento se considera notas.
     notas = _extract_notes(body)
@@ -136,23 +142,23 @@ def load_config(path):
 
 def detect_stack(project_dir):
     """
-    Detecta el stack tecnologico de un proyecto analizando ficheros clave.
+    Detecta el stack tecnológico de un proyecto analizando ficheros clave.
 
     Examina la presencia de ficheros como package.json, tsconfig.json,
     pyproject.toml, Cargo.toml, go.mod, etc. para inferir el runtime,
     lenguaje, framework y ORM del proyecto.
 
-    La deteccion de frameworks y ORMs se hace leyendo las dependencias
+    La detección de frameworks y ORMs se hace leyendo las dependencias
     declaradas en los manifiestos del proyecto (package.json para Node,
     pyproject.toml para Python, etc.).
 
     Args:
-        project_dir: ruta al directorio raiz del proyecto.
+        project_dir: ruta al directorio raíz del proyecto.
 
     Returns:
         dict con las claves: runtime, lenguaje, framework, orm, test_runner,
         bundler. Los valores no detectados se devuelven como 'desconocido'
-        o 'ninguno' segun corresponda.
+        o 'ninguno' según corresponda.
 
     Ejemplo:
         >>> stack = detect_stack("/mi-proyecto-next")
@@ -168,8 +174,8 @@ def detect_stack(project_dir):
         "bundler": "desconocido",
     }
 
-    # --- Deteccion de runtime y lenguaje ---
-    # El orden importa: se comprueba primero lo mas especifico.
+    # --- Detección de runtime y lenguaje ---
+    # El orden importa: se comprueba primero lo más específico.
     # Si hay package.json es un proyecto Node; la presencia de tsconfig.json
     # lo eleva a TypeScript.
 
@@ -254,19 +260,20 @@ def _parse_frontmatter(content):
     """
     Extrae el frontmatter YAML y el cuerpo Markdown de un texto.
 
-    El frontmatter debe estar delimitado por lineas que contengan
-    exactamente '---'. El primer delimitador debe ser la primera linea
-    no vacia del documento.
+    El frontmatter debe estar delimitado por líneas que contengan
+    exactamente '---'. El primer delimitador debe ser la primera línea
+    no vacía del documento.
 
     Args:
         content: texto completo del fichero.
 
     Returns:
         tupla (frontmatter_str, body_str). Si no hay frontmatter,
-        frontmatter_str sera una cadena vacia.
+        frontmatter_str será una cadena vacía.
     """
-    # Se busca el patron ---\n...\n--- al principio del contenido
-    match = re.match(r"^---\s*\n(.*?)\n---\s*\n?(.*)", content, re.DOTALL)
+    # Se busca el patrón ---\n...\n--- al principio del contenido.
+    # El grupo central usa .*? (lazy) para detenerse en el primer cierre ---.
+    match = re.match(r"\A---[ \t]*\n(.*?)\n---[ \t]*\n?(.*)", content, re.DOTALL)
     if match:
         return match.group(1), match.group(2)
     return "", content
@@ -287,7 +294,7 @@ def _deep_merge(base, override):
         override: diccionario con los valores que sobreescriben.
 
     Returns:
-        dict nuevo con la fusion de ambos.
+        dict nuevo con la fusión de ambos.
 
     Ejemplo:
         >>> _deep_merge({"a": {"x": 1, "y": 2}}, {"a": {"x": 99}})
@@ -306,12 +313,12 @@ def _parse_yaml(text):
     """
     Parsea un texto YAML y devuelve un diccionario.
 
-    Intenta usar PyYAML si esta disponible. En caso contrario, recurre
-    a un parser basico que soporta el subconjunto de YAML necesario
-    para la configuracion del plugin: diccionarios anidados con valores
-    escalares (strings, numeros, booleanos).
+    Intenta usar PyYAML si está disponible. En caso contrario, recurre
+    a un parser básico que soporta el subconjunto de YAML necesario
+    para la configuración del plugin: diccionarios anidados con valores
+    escalares (strings, números, booleanos).
 
-    El parser basico no soporta listas, anclas, aliases ni otros
+    El parser básico no soporta listas, anclas, aliases ni otros
     constructos avanzados de YAML. Para configuraciones complejas
     se recomienda instalar PyYAML.
 
@@ -319,7 +326,7 @@ def _parse_yaml(text):
         text: cadena con contenido YAML.
 
     Returns:
-        dict con los valores parseados, o dict vacio si el parseo falla.
+        dict con los valores parseados, o dict vacío si el parseo falla.
     """
     if _HAS_YAML:
         try:
@@ -327,7 +334,7 @@ def _parse_yaml(text):
             if not isinstance(result, dict):
                 print(
                     "[Alfred Dev] Aviso: el frontmatter YAML no es un diccionario. "
-                    "Se ignorara la configuracion del fichero.",
+                    "Se ignorará la configuración del fichero.",
                     file=sys.stderr,
                 )
                 return {}
@@ -335,7 +342,7 @@ def _parse_yaml(text):
         except yaml.YAMLError as e:
             print(
                 f"[Alfred Dev] Error de sintaxis en el frontmatter YAML: {e}. "
-                f"Se ignorara la configuracion del fichero.",
+                f"Se ignorará la configuración del fichero.",
                 file=sys.stderr,
             )
             return {}
@@ -347,17 +354,17 @@ def _basic_yaml_parse(text):
     """
     Parser YAML minimalista sin dependencias externas.
 
-    Soporta el subconjunto necesario para la configuracion del plugin:
+    Soporta el subconjunto necesario para la configuración del plugin:
     - Pares clave: valor
-    - Anidamiento por indentacion (espacios)
+    - Anidamiento por indentación (espacios)
     - Valores escalares: strings, enteros, floats, booleanos, null
 
-    No soporta listas, strings multilinea, anclas ni aliases. Esto es
-    un fallback para entornos sin PyYAML; en produccion se recomienda
+    No soporta listas, strings multilínea, anclas ni aliases. Esto es
+    un fallback para entornos sin PyYAML; en producción se recomienda
     tener PyYAML instalado.
 
     Args:
-        text: cadena con contenido YAML basico.
+        text: cadena con contenido YAML básico.
 
     Returns:
         dict con los valores parseados.
@@ -368,16 +375,16 @@ def _basic_yaml_parse(text):
     stack = [(0, result)]
 
     for line in text.split("\n"):
-        # Se ignoran lineas vacias y comentarios
+        # Se ignoran líneas vacías y comentarios
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
 
-        # Se calcula la indentacion para determinar el nivel
+        # Se calcula la indentación para determinar el nivel
         indent = len(line) - len(line.lstrip())
 
-        # Se busca el patron clave: valor
-        match = re.match(r"^(\w[\w\-_]*):\s*(.*)", stripped)
+        # Se busca el patrón clave: valor
+        match = re.match(r"^(\w[\w\-]*):\s*(.*)", stripped)
         if not match:
             continue
 
@@ -406,13 +413,13 @@ def _coerce_yaml_value(value):
     """
     Convierte un valor YAML en cadena al tipo Python correspondiente.
 
-    Reglas de conversion:
+    Reglas de conversión:
     - 'true'/'false' (case insensitive) -> bool
     - 'null'/'~' -> None
-    - Numeros enteros -> int
-    - Numeros decimales -> float
+    - Números enteros -> int
+    - Números decimales -> float
     - Strings entre comillas -> string sin comillas
-    - Todo lo demas -> string tal cual
+    - Todo lo demás -> string tal cual
 
     Args:
         value: cadena con el valor YAML crudo.
@@ -453,7 +460,7 @@ def _coerce_yaml_value(value):
 
 def _extract_notes(body):
     """
-    Extrae el contenido de la seccion de notas del cuerpo Markdown.
+    Extrae el contenido de la sección de notas del cuerpo Markdown.
 
     Busca una cabecera (h1-h6) cuyo texto contenga 'Notas' y extrae
     todo el contenido hasta la siguiente cabecera del mismo nivel o
@@ -463,11 +470,12 @@ def _extract_notes(body):
         body: texto Markdown (sin frontmatter).
 
     Returns:
-        str con el contenido de la seccion de notas, o cadena vacia
-        si no se encuentra ninguna seccion con ese titulo.
+        str con el contenido de la sección de notas, o cadena vacía
+        si no se encuentra ninguna sección con ese título.
     """
-    # Se busca una linea que empiece con # y contenga "Notas"
-    pattern = re.compile(r"^(#{1,6})\s+.*[Nn]otas.*$", re.MULTILINE)
+    # Se busca una línea que empiece con # y contenga "Notas".
+    # Se usa [^\n]*? (lazy) para evitar backtracking excesivo en líneas largas.
+    pattern = re.compile(r"^(#{1,6})\s+[^\n]*?[Nn]otas[^\n]*$", re.MULTILINE)
     match = pattern.search(body)
     if not match:
         return ""
@@ -507,7 +515,7 @@ def _detect_node_details(project_dir, stack):
     except (OSError, IOError, json.JSONDecodeError) as e:
         print(
             f"[Alfred Dev] Aviso: no se pudo leer '{pkg_path}': {e}. "
-            f"La deteccion de framework sera incompleta.",
+            f"La detección de framework será incompleta.",
             file=sys.stderr,
         )
         return
@@ -518,7 +526,7 @@ def _detect_node_details(project_dir, stack):
         **pkg.get("devDependencies", {}),
     }
 
-    # Frameworks: se comprueba del mas especifico al mas generico.
+    # Frameworks: se comprueba del más específico al más genérico.
     # El orden determina la prioridad cuando hay varios presentes.
     frameworks = [
         "next", "nuxt", "astro", "remix", "gatsby", "svelte",
@@ -566,7 +574,7 @@ def _detect_python_details(project_dir, stack):
     """
     Detecta framework, ORM y test runner en un proyecto Python.
 
-    Lee pyproject.toml (de forma basica, sin parser TOML completo)
+    Lee pyproject.toml (de forma básica, sin parser TOML completo)
     y requirements.txt para identificar las dependencias.
 
     Args:
@@ -581,8 +589,12 @@ def _detect_python_details(project_dir, stack):
         try:
             with open(pyproject_path, "r", encoding="utf-8") as f:
                 deps_text += f.read()
-        except (OSError, IOError):
-            pass
+        except (OSError, IOError) as e:
+            print(
+                f"[Alfred Dev] Aviso: no se pudo leer '{pyproject_path}': {e}. "
+                f"La detección de framework será incompleta.",
+                file=sys.stderr,
+            )
 
     # Se complementa con requirements.txt si existe
     reqs_path = os.path.join(project_dir, "requirements.txt")
@@ -590,8 +602,12 @@ def _detect_python_details(project_dir, stack):
         try:
             with open(reqs_path, "r", encoding="utf-8") as f:
                 deps_text += "\n" + f.read()
-        except (OSError, IOError):
-            pass
+        except (OSError, IOError) as e:
+            print(
+                f"[Alfred Dev] Aviso: no se pudo leer '{reqs_path}': {e}. "
+                f"La detección de framework será incompleta.",
+                file=sys.stderr,
+            )
 
     deps_lower = deps_text.lower()
 

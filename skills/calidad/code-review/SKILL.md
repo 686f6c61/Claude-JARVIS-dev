@@ -1,69 +1,69 @@
 ---
 name: code-review
-description: "Usar para revisar codigo con foco en calidad, legibilidad y errores logicos"
+description: "Usar para revisar código con foco en calidad, legibilidad y errores lógicos"
 ---
 
-# Revision de codigo
+# Revisión de código
 
 ## Resumen
 
-Este skill ejecuta una revision de codigo exhaustiva centrada en calidad, legibilidad, mantenibilidad y correccion logica. La revision no es un tramite burocratico sino una herramienta para mejorar el codigo y compartir conocimiento dentro del equipo.
+Este skill ejecuta una revisión de código exhaustiva centrada en calidad, legibilidad, mantenibilidad y corrección lógica. La revisión no es un trámite burocrático sino una herramienta para mejorar el código y compartir conocimiento dentro del equipo.
 
-Si las herramientas del toolkit `pr-review-toolkit` estan disponibles, este skill las coordina para cubrir multiples perspectivas: calidad general, fallos silenciosos y oportunidades de simplificacion.
+Si las herramientas del toolkit `pr-review-toolkit` están disponibles, este skill las coordina para cubrir múltiples perspectivas: calidad general, fallos silenciosos y oportunidades de simplificación.
 
 ## Proceso
 
-1. **Entender el contexto del cambio.** Antes de revisar linea por linea, entender el proposito del cambio. Leer la descripcion del PR, el issue asociado o preguntar al usuario. Un cambio que parece incorrecto puede ser correcto si se entiende el contexto.
+1. **Entender el contexto del cambio.** Antes de revisar línea por línea, entender el propósito del cambio. Leer la descripción del PR, el issue asociado o preguntar al usuario. Un cambio que parece incorrecto puede ser correcto si se entiende el contexto.
 
-2. **Revisar la legibilidad.** El codigo se lee muchas mas veces de las que se escribe:
+2. **Revisar la legibilidad.** El código se lee muchas más veces de las que se escribe:
 
    - Los nombres de variables, funciones y clases son descriptivos?
-   - La estructura del codigo es clara sin necesidad de comentarios explicativos?
-   - Las funciones son cortas y con responsabilidad unica?
-   - Los comentarios explican el "por que", no el "que"?
+   - La estructura del código es clara sin necesidad de comentarios explicativos?
+   - Las funciones son cortas y con responsabilidad única?
+   - Los comentarios explican el "por qué", no el "qué"?
 
-3. **Buscar errores logicos.** Los bugs mas peligrosos son los que no producen error:
+3. **Buscar errores lógicos.** Los bugs más peligrosos son los que no producen error:
 
    - Condiciones invertidas o incompletas.
-   - Off-by-one errors en bucles e indices.
+   - Off-by-one errors en bucles e índices.
    - Variables no inicializadas o reutilizadas incorrectamente.
-   - Race conditions en codigo asincrono.
+   - Race conditions en código asíncrono.
    - Falta de manejo de null/undefined/None.
 
 4. **Verificar manejo de errores.** Los errores silenciosos son los peores:
 
-   - Los catch/except vacios se usan sin justificacion?
+   - Los catch/except vacíos se usan sin justificación?
    - Los errores se propagan correctamente o se tragan?
-   - El usuario recibe informacion util cuando algo falla?
-   - Los errores se registran para depuracion posterior?
+   - El usuario recibe información útil cuando algo falla?
+   - Los errores se registran para depuración posterior?
 
-5. **Evaluar la complejidad.** El codigo simple es mas facil de mantener y menos propenso a bugs:
+5. **Evaluar la complejidad.** El código simple es más fácil de mantener y menos propenso a bugs:
 
-   - Hay condicionales anidados profundamente que se podrian simplificar?
-   - Hay duplicacion que se podria abstraer?
-   - Las abstracciones existentes son justificadas o son sobreingenieria?
+   - Hay condicionales anidados profundamente que se podrían simplificar?
+   - Hay duplicación que se podría abstraer?
+   - Las abstracciones existentes son justificadas o son sobreingeniería?
 
-6. **Verificar cobertura de edge cases.** Para cada funcion o flujo critico:
+6. **Verificar cobertura de edge cases.** Para cada función o flujo crítico:
 
-   - Que pasa con inputs vacios?
-   - Que pasa con valores extremos (muy grandes, muy pequenos, negativos)?
-   - Que pasa con tipos inesperados?
-   - Que pasa bajo condiciones de error (red, disco, permisos)?
+   - Qué pasa con inputs vacíos?
+   - Qué pasa con valores extremos (muy grandes, muy pequeños, negativos)?
+   - Qué pasa con tipos inesperados?
+   - Qué pasa bajo condiciones de error (red, disco, permisos)?
 
-7. **Delegar en herramientas especializadas si estan disponibles.** Si `pr-review-toolkit` esta disponible:
+7. **Delegar en herramientas especializadas si están disponibles.** Si `pr-review-toolkit` está disponible:
 
-   - `code-reviewer`: revision general de calidad y adherencia a convenciones.
-   - `silent-failure-hunter`: deteccion de fallos silenciosos y manejo inadecuado de errores.
-   - `code-simplifier`: oportunidades de simplificacion sin alterar funcionalidad.
+   - `code-reviewer`: revisión general de calidad y adherencia a convenciones.
+   - `silent-failure-hunter`: detección de fallos silenciosos y manejo inadecuado de errores.
+   - `code-simplifier`: oportunidades de simplificación sin alterar funcionalidad.
 
    Umbral de confianza: solo reportar hallazgos con confianza >= 80%.
 
-8. **Documentar hallazgos.** Cada hallazgo debe incluir: ubicacion en el codigo, descripcion del problema, impacto potencial y sugerencia de correccion.
+8. **Documentar hallazgos.** Cada hallazgo debe incluir: ubicación en el código, descripción del problema, impacto potencial y sugerencia de corrección.
 
-## Criterios de exito
+## Criterios de éxito
 
-- Se han revisado legibilidad, errores logicos, manejo de errores, complejidad y edge cases.
-- Los hallazgos incluyen ubicacion, descripcion, impacto y sugerencia de correccion.
+- Se han revisado legibilidad, errores lógicos, manejo de errores, complejidad y edge cases.
+- Los hallazgos incluyen ubicación, descripción, impacto y sugerencia de corrección.
 - Solo se reportan hallazgos con confianza >= 80%.
-- El tono de la revision es constructivo y orientado a mejorar el codigo.
+- El tono de la revisión es constructivo y orientado a mejorar el código.
 - Se distingue entre problemas que bloquean y sugerencias de mejora.

@@ -19,7 +19,7 @@
 
 {{breaking_changes}}
 
-## Guia de migracion
+## Guía de migración
 
 {{guia_migracion}}
 

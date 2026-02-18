@@ -1,7 +1,7 @@
 {
   "name": "alfred-dev",
-  "version": "0.1.1",
-  "description": "Plugin de Claude Code: tu empresa de ingenieria de software en un plugin",
+  "version": "0.1.2",
+  "description": "Plugin de Claude Code: tu empresa de ingeniería de software en un plugin",
   "author": "00b",
   "license": "MIT",
   "repository": {

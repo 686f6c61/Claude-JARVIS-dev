@@ -2,7 +2,7 @@
 """
 Orquestador de flujos del plugin Alfred Dev.
 
-Este modulo gestiona el ciclo de vida completo de los flujos de trabajo
+Este módulo gestiona el ciclo de vida completo de los flujos de trabajo
 (feature, fix, spike, ship, audit). Cada flujo se compone de fases
 secuenciales con gates de control que determinan si se puede avanzar
 a la siguiente fase.
@@ -14,11 +14,11 @@ El orquestador se encarga de:
 - Persistir y recuperar el estado de las sesiones en disco.
 
 Arquitectura de gates:
-    Las gates actuan como puntos de control entre fases. Su comportamiento
+    Las gates actúan como puntos de control entre fases. Su comportamiento
     depende del tipo definido en cada fase: las gates de tipo «usuario»
-    requieren aprobacion explicita; las «automatico» se evaluan contra
-    metricas objetivas como tests verdes o pipeline OK; las combinadas
-    (ej. «automatico+seguridad») acumulan ambas condiciones.
+    requieren aprobación explícita; las «automático» se evalúan contra
+    métricas objetivas como tests verdes o pipeline OK; las combinadas
+    (ej. «automático+seguridad») acumulan ambas condiciones.
 """
 
 import json
@@ -28,7 +28,22 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 
-# --- Definicion de flujos ---------------------------------------------------
+# --- Constantes de tipos de gate -------------------------------------------
+# Se extraen como constantes para evitar la duplicación de literales
+# y facilitar la validación centralizada.
+
+GATE_USUARIO = "usuario"
+GATE_AUTOMATICO = "automatico"
+GATE_LIBRE = "libre"
+GATE_USUARIO_SEGURIDAD = "usuario+seguridad"
+GATE_AUTOMATICO_SEGURIDAD = "automatico+seguridad"
+
+_KNOWN_GATE_TYPES = {
+    GATE_LIBRE, GATE_USUARIO, GATE_AUTOMATICO,
+    GATE_USUARIO_SEGURIDAD, GATE_AUTOMATICO_SEGURIDAD,
+}
+
+# --- Definición de flujos ---------------------------------------------------
 # Cada flujo describe una secuencia de fases que el orquestador recorre.
 # Los agentes listados en cada fase son los responsables de ejecutarla.
 
@@ -41,10 +56,10 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["product-owner"],
                 "paralelo": False,
                 "gate": "gate_producto",
-                "gate_tipo": "usuario",
+                "gate_tipo": GATE_USUARIO,
                 "descripcion": (
-                    "Analisis de requisitos y definicion del alcance "
-                    "funcional de la nueva caracteristica."
+                    "Análisis de requisitos y definición del alcance "
+                    "funcional de la nueva característica."
                 ),
             },
             {
@@ -52,10 +67,10 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["architect", "security-officer"],
                 "paralelo": True,
                 "gate": "gate_arquitectura",
-                "gate_tipo": "usuario",
+                "gate_tipo": GATE_USUARIO,
                 "descripcion": (
-                    "Diseno tecnico, eleccion de patrones y validacion "
-                    "de la propuesta arquitectonica con threat model."
+                    "Diseño técnico, elección de patrones y validación "
+                    "de la propuesta arquitectónica con threat model."
                 ),
             },
             {
@@ -63,9 +78,9 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["senior-dev"],
                 "paralelo": False,
                 "gate": "gate_desarrollo",
-                "gate_tipo": "automatico",
+                "gate_tipo": GATE_AUTOMATICO,
                 "descripcion": (
-                    "Implementacion del codigo siguiendo TDD estricto "
+                    "Implementación del código siguiendo TDD estricto "
                     "con ciclos rojo-verde-refactor."
                 ),
             },
@@ -74,10 +89,10 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["qa-engineer", "security-officer"],
                 "paralelo": True,
                 "gate": "gate_calidad",
-                "gate_tipo": "automatico+seguridad",
+                "gate_tipo": GATE_AUTOMATICO_SEGURIDAD,
                 "descripcion": (
-                    "Revision de calidad, ejecucion de tests y "
-                    "auditoria de seguridad en paralelo."
+                    "Revisión de calidad, ejecución de tests y "
+                    "auditoría de seguridad en paralelo."
                 ),
             },
             {
@@ -85,9 +100,9 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["tech-writer"],
                 "paralelo": False,
                 "gate": "gate_documentacion",
-                "gate_tipo": "libre",
+                "gate_tipo": GATE_LIBRE,
                 "descripcion": (
-                    "Generacion de documentacion tecnica y de usuario "
+                    "Generación de documentación técnica y de usuario "
                     "para la comunidad."
                 ),
             },
@@ -96,10 +111,10 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["devops-engineer", "security-officer"],
                 "paralelo": False,
                 "gate": "gate_entrega",
-                "gate_tipo": "usuario+seguridad",
+                "gate_tipo": GATE_USUARIO_SEGURIDAD,
                 "descripcion": (
-                    "Preparacion del entregable, changelog y "
-                    "validacion final antes del merge."
+                    "Preparación del entregable, changelog y "
+                    "validación final antes del merge."
                 ),
             },
         ],
@@ -112,10 +127,10 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["senior-dev"],
                 "paralelo": False,
                 "gate": "gate_diagnostico",
-                "gate_tipo": "usuario",
+                "gate_tipo": GATE_USUARIO,
                 "descripcion": (
-                    "Identificacion de la causa raiz del bug "
-                    "mediante analisis de logs, trazas y reproduccion."
+                    "Identificación de la causa raíz del bug "
+                    "mediante análisis de logs, trazas y reproducción."
                 ),
             },
             {
@@ -123,9 +138,9 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["senior-dev"],
                 "paralelo": False,
                 "gate": "gate_correccion",
-                "gate_tipo": "automatico",
+                "gate_tipo": GATE_AUTOMATICO,
                 "descripcion": (
-                    "Aplicacion del fix con test de regresion "
+                    "Aplicación del fix con test de regresión "
                     "que demuestre que el bug queda resuelto."
                 ),
             },
@@ -134,10 +149,10 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["qa-engineer", "security-officer"],
                 "paralelo": True,
                 "gate": "gate_validacion",
-                "gate_tipo": "automatico+seguridad",
+                "gate_tipo": GATE_AUTOMATICO_SEGURIDAD,
                 "descripcion": (
-                    "Validacion completa: tests de regresion, "
-                    "suite existente y revision de seguridad."
+                    "Validación completa: tests de regresión, "
+                    "suite existente y revisión de seguridad."
                 ),
             },
         ],
@@ -150,10 +165,10 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["architect", "senior-dev"],
                 "paralelo": True,
                 "gate": "gate_exploracion",
-                "gate_tipo": "libre",
+                "gate_tipo": GATE_LIBRE,
                 "descripcion": (
-                    "Investigacion exploratoria: pruebas de concepto, "
-                    "benchmarks y evaluacion de alternativas."
+                    "Investigación exploratoria: pruebas de concepto, "
+                    "benchmarks y evaluación de alternativas."
                 ),
             },
             {
@@ -161,9 +176,9 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["architect"],
                 "paralelo": False,
                 "gate": "gate_conclusiones",
-                "gate_tipo": "usuario",
+                "gate_tipo": GATE_USUARIO,
                 "descripcion": (
-                    "Consolidacion de hallazgos en un informe "
+                    "Consolidación de hallazgos en un informe "
                     "con recomendaciones accionables."
                 ),
             },
@@ -177,9 +192,9 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["qa-engineer", "security-officer"],
                 "paralelo": True,
                 "gate": "gate_auditoria_final",
-                "gate_tipo": "automatico+seguridad",
+                "gate_tipo": GATE_AUTOMATICO_SEGURIDAD,
                 "descripcion": (
-                    "Auditoria completa de calidad y seguridad "
+                    "Auditoría completa de calidad y seguridad "
                     "antes de la release."
                 ),
             },
@@ -188,10 +203,10 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["tech-writer"],
                 "paralelo": False,
                 "gate": "gate_documentacion_ship",
-                "gate_tipo": "libre",
+                "gate_tipo": GATE_LIBRE,
                 "descripcion": (
-                    "Actualizacion de la documentacion de release, "
-                    "changelog y guias de migracion."
+                    "Actualización de la documentación de release, "
+                    "changelog y guías de migración."
                 ),
             },
             {
@@ -199,10 +214,10 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["devops-engineer", "security-officer"],
                 "paralelo": False,
                 "gate": "gate_empaquetado",
-                "gate_tipo": "automatico",
+                "gate_tipo": GATE_AUTOMATICO,
                 "descripcion": (
-                    "Generacion del artefacto de release, "
-                    "versionado semantico y etiquetado."
+                    "Generación del artefacto de release, "
+                    "versionado semántico y etiquetado."
                 ),
             },
             {
@@ -210,9 +225,9 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 "agentes": ["devops-engineer"],
                 "paralelo": False,
                 "gate": "gate_despliegue",
-                "gate_tipo": "usuario+seguridad",
+                "gate_tipo": GATE_USUARIO_SEGURIDAD,
                 "descripcion": (
-                    "Despliegue a produccion con validacion "
+                    "Despliegue a producción con validación "
                     "post-deploy y rollback preparado."
                 ),
             },
@@ -231,11 +246,11 @@ FLOWS: Dict[str, Dict[str, Any]] = {
                 ],
                 "paralelo": True,
                 "gate": "gate_auditoria",
-                "gate_tipo": "automatico+seguridad",
+                "gate_tipo": GATE_AUTOMATICO_SEGURIDAD,
                 "descripcion": (
-                    "Auditoria completa del codigo en paralelo: "
+                    "Auditoría completa del código en paralelo: "
                     "calidad, seguridad, arquitectura "
-                    "y documentacion."
+                    "y documentación."
                 ),
             },
         ],
@@ -245,21 +260,21 @@ FLOWS: Dict[str, Dict[str, Any]] = {
 
 def create_session(command: str, description: str) -> Dict[str, Any]:
     """
-    Crea una nueva sesion de trabajo para el flujo indicado.
+    Crea una nueva sesión de trabajo para el flujo indicado.
 
-    La sesion contiene todo el estado necesario para que el orquestador
-    sepa en que punto del flujo se encuentra el usuario y que fases
+    La sesión contiene todo el estado necesario para que el orquestador
+    sepa en qué punto del flujo se encuentra el usuario y qué fases
     se han completado.
 
     Args:
         command: Identificador del flujo (feature, fix, spike, ship, audit).
-        description: Descripcion en lenguaje natural de la tarea.
+        description: Descripción en lenguaje natural de la tarea.
 
     Returns:
-        Diccionario con el estado inicial de la sesion.
+        Diccionario con el estado inicial de la sesión.
 
     Raises:
-        ValueError: Si el comando no corresponde a ningun flujo definido.
+        ValueError: Si el comando no corresponde a ningún flujo definido.
     """
     if command not in FLOWS:
         raise ValueError(
@@ -289,40 +304,41 @@ def check_gate(
     tests_ok: bool = True,
 ) -> Dict[str, Any]:
     """
-    Evalua la gate de la fase actual para decidir si se puede avanzar.
+    Evalúa la gate de la fase actual para decidir si se puede avanzar.
 
-    La logica de evaluacion depende del tipo de gate definido en la fase:
+    La lógica de evaluación depende del tipo de gate definido en la fase:
     - «usuario»: requiere resultado «aprobado».
-    - «automatico»: requiere resultado «aprobado» y tests verdes.
-    - «usuario+seguridad»: requiere aprobacion del usuario y seguridad OK.
-    - «automatico+seguridad»: requiere tests, seguridad y resultado OK.
+    - «automático»: requiere resultado «aprobado» y tests verdes.
+    - «usuario+seguridad»: requiere aprobación del usuario y seguridad OK.
+    - «automático+seguridad»: requiere tests, seguridad y resultado OK.
     - «libre»: se aprueba siempre que el resultado sea «aprobado».
 
     Args:
-        session: Estado actual de la sesion.
+        session: Estado actual de la sesión.
         resultado: Resultado reportado (normalmente «aprobado» o «rechazado»).
-        security_ok: Indica si la auditoria de seguridad es favorable.
+        security_ok: Indica si la auditoría de seguridad es favorable.
         tests_ok: Indica si los tests pasan correctamente.
 
     Returns:
         Diccionario con las claves «passed» (bool) y «reason» (str).
     """
-    flow = FLOWS[session["comando"]]
+    comando = session["comando"]
+    if comando not in FLOWS:
+        return {"passed": False, "reason": f"Flujo '{comando}' no definido en FLOWS."}
+
+    flow = FLOWS[comando]
     fase_numero = session["fase_numero"]
     fase = flow["fases"][fase_numero]
     gate_tipo = fase["gate_tipo"]
 
     # Se acumulan las condiciones que debe cumplir la gate.
-    # El orden de comprobacion determina que error se reporta primero.
+    # El orden de comprobación determina qué error se reporta primero.
     failures = []
 
     requires_tests = "automatico" in gate_tipo
     requires_security = "seguridad" in gate_tipo
-    requires_approval = gate_tipo in ("usuario", "usuario+seguridad")
-    is_known = gate_tipo in (
-        "libre", "usuario", "automatico",
-        "usuario+seguridad", "automatico+seguridad",
-    )
+    requires_approval = gate_tipo in (GATE_USUARIO, GATE_USUARIO_SEGURIDAD)
+    is_known = gate_tipo in _KNOWN_GATE_TYPES
 
     if not is_known:
         return {"passed": False, "reason": f"Tipo de gate desconocido: {gate_tipo}"}
@@ -330,10 +346,10 @@ def check_gate(
     if requires_tests and not tests_ok:
         failures.append("Los tests no pasan.")
     if requires_security and not security_ok:
-        failures.append("La auditoria de seguridad no es favorable.")
+        failures.append("La auditoría de seguridad no es favorable.")
     if resultado != "aprobado":
         if requires_approval:
-            failures.append("Aprobacion del usuario requerida.")
+            failures.append("Aprobación del usuario requerida.")
         else:
             failures.append("El resultado no es favorable.")
 
@@ -351,21 +367,21 @@ def advance_phase(
     tests_ok: bool = True,
 ) -> Dict[str, Any]:
     """
-    Intenta avanzar la sesion a la siguiente fase del flujo.
+    Intenta avanzar la sesión a la siguiente fase del flujo.
 
-    Primero evalua la gate de la fase actual. Si la gate se supera,
+    Primero evalúa la gate de la fase actual. Si la gate se supera,
     registra la fase como completada y actualiza el puntero a la
-    siguiente. Si ya no quedan fases, marca la sesion como «completado».
+    siguiente. Si ya no quedan fases, marca la sesión como «completado».
 
     Args:
-        session: Estado actual de la sesion.
+        session: Estado actual de la sesión.
         resultado: Resultado a evaluar en la gate (por defecto «aprobado»).
         artefactos: Lista opcional de artefactos generados en la fase.
-        security_ok: Indica si la auditoria de seguridad es favorable.
+        security_ok: Indica si la auditoría de seguridad es favorable.
         tests_ok: Indica si los tests pasan correctamente.
 
     Returns:
-        Diccionario con el estado actualizado de la sesion.
+        Diccionario con el estado actualizado de la sesión.
 
     Raises:
         RuntimeError: Si la gate de la fase actual no se supera.
@@ -373,14 +389,18 @@ def advance_phase(
     if artefactos is None:
         artefactos = []
 
-    flow = FLOWS[session["comando"]]
+    comando = session["comando"]
+    if comando not in FLOWS:
+        raise RuntimeError(f"Flujo '{comando}' no definido en FLOWS.")
+
+    flow = FLOWS[comando]
     fases = flow["fases"]
 
-    # Si ya esta completado, devolver sin cambios
+    # Si ya está completado, devolver sin cambios
     if session["fase_actual"] == "completado":
         return session
 
-    # Evaluar la gate de la fase actual propagando todos los parametros
+    # Evaluar la gate de la fase actual propagando todos los parámetros
     gate_result = check_gate(
         session, resultado=resultado, security_ok=security_ok, tests_ok=tests_ok
     )
@@ -398,17 +418,17 @@ def advance_phase(
     }
     session["fases_completadas"].append(fase_completada)
 
-    # Incorporar artefactos al registro global de la sesion
+    # Incorporar artefactos al registro global de la sesión
     session["artefactos"].extend(artefactos)
 
-    # Avanzar al siguiente indice
+    # Avanzar al siguiente índice
     siguiente = session["fase_numero"] + 1
 
     if siguiente < len(fases):
         session["fase_numero"] = siguiente
         session["fase_actual"] = fases[siguiente]["nombre"]
     else:
-        # No quedan mas fases: el flujo esta completado
+        # No quedan más fases: el flujo está completado
         session["fase_actual"] = "completado"
         session["fase_numero"] = siguiente
 
@@ -418,103 +438,106 @@ def advance_phase(
 
 def save_state(session: Dict[str, Any], state_path: str) -> None:
     """
-    Persiste el estado de la sesion en un fichero JSON.
+    Persiste el estado de la sesión en un fichero JSON.
 
-    Se utiliza escritura atomica (escritura + renombrado) para evitar
-    corrupcion si el proceso se interrumpe a mitad de escritura. Si la
-    operacion falla, se limpia el fichero temporal y se relanza el error
-    como RuntimeError para que el llamante sepa que el estado no se guardo.
+    Se utiliza escritura atómica (escritura + renombrado) para evitar
+    corrupción si el proceso se interrumpe a mitad de escritura. Si la
+    operación falla, se limpia el fichero temporal y se relanza el error
+    como RuntimeError para que el llamante sepa que el estado no se guardó.
 
     Args:
-        session: Estado de la sesion a guardar.
+        session: Estado de la sesión a guardar.
         state_path: Ruta absoluta del fichero de destino.
 
     Raises:
-        RuntimeError: Si no se puede guardar el estado por cualquier razon.
+        RuntimeError: Si no se puede guardar el estado por cualquier razón.
     """
     tmp_path = state_path + ".tmp"
     try:
         with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(session, f, indent=2, ensure_ascii=False)
-        # Renombrado atomico en sistemas POSIX
+        # Renombrado atómico en sistemas POSIX
         os.replace(tmp_path, state_path)
     except (OSError, TypeError) as e:
-        # Limpiar el fichero temporal si quedo huerfano
+        # Limpiar el fichero temporal si quedó huérfano
         if os.path.exists(tmp_path):
             try:
                 os.unlink(tmp_path)
-            except OSError:
-                pass
+            except OSError as cleanup_err:
+                print(
+                    f"[Alfred Dev] Aviso: no se pudo limpiar el fichero temporal "
+                    f"'{tmp_path}': {cleanup_err}",
+                    file=sys.stderr,
+                )
         raise RuntimeError(
-            f"No se pudo guardar el estado de sesion en '{state_path}': {e}"
+            f"No se pudo guardar el estado de sesión en '{state_path}': {e}"
         ) from e
 
 
-# Claves minimas que debe tener un estado de sesion valido
+# Claves mínimas que debe tener un estado de sesión válido
 _REQUIRED_STATE_KEYS = {"comando", "fase_actual", "fase_numero"}
 
 
 def load_state(state_path: str) -> Optional[Dict[str, Any]]:
     """
-    Carga el estado de una sesion desde un fichero JSON.
+    Carga el estado de una sesión desde un fichero JSON.
 
     Distingue entre tres situaciones:
     - Fichero ausente: devuelve None silenciosamente (caso normal).
     - Fichero corrupto o ilegible: devuelve None pero avisa en stderr.
-    - Fichero con estructura invalida: devuelve None y avisa en stderr.
+    - Fichero con estructura inválida: devuelve None y avisa en stderr.
 
     Args:
         state_path: Ruta absoluta del fichero a leer.
 
     Returns:
-        Diccionario con el estado de la sesion, o None si el fichero
-        no existe, esta corrupto o tiene estructura invalida.
+        Diccionario con el estado de la sesión, o None si el fichero
+        no existe, está corrupto o tiene estructura inválida.
     """
-    if not os.path.isfile(state_path):
-        return None
-
     try:
         with open(state_path, "r", encoding="utf-8") as f:
             data = json.load(f)
+    except FileNotFoundError:
+        return None
     except json.JSONDecodeError as e:
         print(
-            f"[Alfred Dev] Error: el fichero de estado '{state_path}' esta corrupto: {e}",
+            f"[Alfred Dev] Error: el fichero de estado '{state_path}' está corrupto: {e}",
             file=sys.stderr,
         )
         return None
     except OSError as e:
         print(
-            f"[Alfred Dev] Error al leer el estado de sesion '{state_path}': {e}",
+            f"[Alfred Dev] Error al leer el estado de sesión '{state_path}': {e}",
             file=sys.stderr,
         )
         return None
 
-    # Validar estructura minima: presencia de claves obligatorias
+    # Validar estructura mínima: presencia de claves obligatorias
     if not isinstance(data, dict) or not _REQUIRED_STATE_KEYS.issubset(data.keys()):
         print(
             f"[Alfred Dev] Aviso: el fichero de estado '{state_path}' tiene una "
-            f"estructura inesperada (faltan claves obligatorias). Se ignorara.",
+            f"estructura inesperada (faltan claves obligatorias). Se ignorará.",
             file=sys.stderr,
         )
         return None
 
     # Validar tipos de las claves obligatorias para evitar TypeError
-    # en comparaciones posteriores (ej: fase_numero >= len(fases))
+    # en comparaciones posteriores (ej.: fase_numero >= len(fases))
     if not isinstance(data.get("comando"), str):
         print(
-            f"[Alfred Dev] Aviso: 'comando' no es un string en '{state_path}'. Se ignorara.",
+            f"[Alfred Dev] Aviso: 'comando' no es un string en '{state_path}'. Se ignorará.",
             file=sys.stderr,
         )
         return None
     if not isinstance(data.get("fase_actual"), str):
         print(
-            f"[Alfred Dev] Aviso: 'fase_actual' no es un string en '{state_path}'. Se ignorara.",
+            f"[Alfred Dev] Aviso: 'fase_actual' no es un string en '{state_path}'. Se ignorará.",
             file=sys.stderr,
         )
         return None
     if not isinstance(data.get("fase_numero"), int):
         print(
-            f"[Alfred Dev] Aviso: 'fase_numero' no es un entero en '{state_path}'. Se ignorara.",
+            f"[Alfred Dev] Aviso: 'fase_numero' no es un entero en '{state_path}'. Se ignorará.",
             file=sys.stderr,
         )
         return None

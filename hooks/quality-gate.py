@@ -6,8 +6,8 @@ Intercepta la salida de comandos Bash para detectar si se han ejecutado
 tests y, en caso afirmativo, analizar si han fallado. Cuando detecta
 fallos, informa por stderr con la voz de "El Rompe-cosas" (QA).
 
-Solo actua sobre comandos que coincidan con runners de tests conocidos.
-El resto de comandos Bash pasan sin inspeccion.
+Solo actúa sobre comandos que coincidan con runners de tests conocidos.
+El resto de comandos Bash pasan sin inspección.
 """
 
 import json
@@ -17,9 +17,9 @@ import sys
 
 # --- Patrones de runners de tests ---
 
-# Expresiones regulares que identifican comandos de ejecucion de tests.
+# Expresiones regulares que identifican comandos de ejecución de tests.
 # Se comprueba contra el comando completo para evitar falsos positivos
-# (por ejemplo, un 'grep pytest' no deberia activar el hook).
+# (por ejemplo, un 'grep pytest' no debería activar el hook).
 TEST_RUNNERS = [
     r"\bpytest\b",
     r"\bpython\s+-m\s+pytest\b",
@@ -49,7 +49,7 @@ TEST_RUNNERS = [
 # --- Patrones de fallo en la salida ---
 
 # Indicadores comunes de que los tests han fallado. Se buscan como
-# palabras completas o patrones especificos para minimizar falsos positivos.
+# palabras completas o patrones específicos para minimizar falsos positivos.
 FAILURE_PATTERNS = [
     r"\bFAIL\b",
     r"\bFAILED\b",
@@ -60,7 +60,6 @@ FAILURE_PATTERNS = [
     r"tests?\s+failed",
     r"ERRORS?:",
     r"AssertionError",
-    r"AssertError",
     r"test\s+result:\s+FAILED",
     r"Build\s+FAILED",
     r"\d+\s+failed",
@@ -69,10 +68,10 @@ FAILURE_PATTERNS = [
 
 
 def is_test_command(command: str) -> bool:
-    """Determina si un comando corresponde a la ejecucion de tests.
+    """Determina si un comando corresponde a la ejecución de tests.
 
     Comprueba el comando contra la lista de runners conocidos. Se usa
-    busqueda por regex con limites de palabra para evitar que comandos
+    búsqueda por regex con límites de palabra para evitar que comandos
     como 'cat pytest.ini' activen el hook.
 
     Args:
@@ -87,16 +86,16 @@ def is_test_command(command: str) -> bool:
 def has_failures(output: str) -> bool:
     """Analiza la salida de un comando de tests en busca de fallos.
 
-    Busca patrones comunes de fallo en la salida estandar del comando.
-    Los patrones se aplican linea a linea con busqueda case-sensitive
-    para los indicadores que suelen ir en mayusculas y case-insensitive
+    Busca patrones comunes de fallo en la salida estándar del comando.
+    Los patrones se aplican línea a línea con búsqueda case-sensitive
+    para los indicadores que suelen ir en mayúsculas y case-insensitive
     para los genéricos.
 
     Args:
-        output: Salida estandar del comando Bash.
+        output: Salida estándar del comando Bash.
 
     Returns:
-        True si se detecta al menos un patron de fallo.
+        True si se detecta al menos un patrón de fallo.
     """
     return any(re.search(pattern, output) for pattern in FAILURE_PATTERNS)
 
@@ -110,10 +109,10 @@ def main():
     """
     try:
         data = json.load(sys.stdin)
-    except (json.JSONDecodeError, ValueError) as e:
+    except ValueError as e:
         print(
             f"[quality-gate] Aviso: no se pudo leer la entrada del hook: {e}. "
-            f"La monitorizacion de tests esta desactivada para este comando.",
+            f"La monitorización de tests está desactivada para este comando.",
             file=sys.stderr,
         )
         sys.exit(0)
@@ -140,10 +139,10 @@ def main():
             "[El Rompe-cosas] He pillado tests rotos\n"
             "\n"
             "Los tests no pasan. Sorpresa: ninguna.\n"
-            "No se avanza con tests en rojo. Asi funciona esto.\n"
+            "No se avanza con tests en rojo. Así funciona esto.\n"
             "\n"
             "Repasa la salida, corrige los fallos y vuelve a ejecutar.\n"
-            "Ese edge case que no contemplaste? Lo encontre.\n",
+            "Ese edge case que no contemplaste? Lo encontré.\n",
             file=sys.stderr,
         )
 

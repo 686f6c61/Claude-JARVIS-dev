@@ -1,67 +1,67 @@
 ---
 name: user-guide
-description: "Usar para escribir guias de usuario o desarrollador"
+description: "Usar para escribir guías de usuario o desarrollador"
 ---
 
-# Escribir guia de usuario
+# Escribir guía de usuario
 
 ## Resumen
 
-Este skill genera guias de usuario o de desarrollador claras y completas. Una buena guia permite al lector ir de "no se nada de esto" a "lo tengo funcionando y entiendo como usarlo" sin necesidad de ayuda externa. El tono es directo, los pasos son verificables y los ejemplos son funcionales.
+Este skill genera guías de usuario o de desarrollador claras y completas. Una buena guía permite al lector ir de "no sé nada de esto" a "lo tengo funcionando y entiendo cómo usarlo" sin necesidad de ayuda externa. El tono es directo, los pasos son verificables y los ejemplos son funcionales.
 
-La guia se adapta al publico: si es para usuarios finales, se evita jerga tecnica; si es para desarrolladores, se incluyen detalles de configuracion e integracion.
+La guía se adapta al público: si es para usuarios finales, se evita jerga técnica; si es para desarrolladores, se incluyen detalles de configuración e integración.
 
 ## Proceso
 
-1. **Identificar al publico objetivo.** La guia se escribe de forma distinta segun quien la va a leer:
+1. **Identificar al público objetivo.** La guía se escribe de forma distinta según quién la va a leer:
 
-   - **Usuario final:** pasos simples, capturas de pantalla si aplica, lenguaje no tecnico.
-   - **Desarrollador que integra:** ejemplos de codigo, documentacion de API, configuracion.
-   - **Desarrollador que contribuye:** setup del entorno, convenios del proyecto, como ejecutar tests.
+   - **Usuario final:** pasos simples, capturas de pantalla si aplica, lenguaje no técnico.
+   - **Desarrollador que integra:** ejemplos de código, documentación de API, configuración.
+   - **Desarrollador que contribuye:** setup del entorno, convenios del proyecto, cómo ejecutar tests.
 
-2. **Redactar la seccion de instalacion.** Paso a paso, sin saltar nada:
+2. **Redactar la sección de instalación.** Paso a paso, sin saltar nada:
 
    - Requisitos previos (versiones de software, sistema operativo, herramientas necesarias).
-   - Comandos de instalacion exactos, copiables y pegables.
-   - Verificacion de que la instalacion ha funcionado (comando o pagina de prueba).
-   - Errores comunes de instalacion y como resolverlos.
+   - Comandos de instalación exactos, copiables y pegables.
+   - Verificación de que la instalación ha funcionado (comando o página de prueba).
+   - Errores comunes de instalación y cómo resolverlos.
 
-3. **Redactar la seccion de configuracion:**
+3. **Redactar la sección de configuración:**
 
-   - Variables de entorno necesarias, con descripcion y ejemplo de valor.
-   - Ficheros de configuracion, con plantilla y explicacion de cada campo.
-   - Valores por defecto y cuando cambiarlos.
+   - Variables de entorno necesarias, con descripción y ejemplo de valor.
+   - Ficheros de configuración, con plantilla y explicación de cada campo.
+   - Valores por defecto y cuándo cambiarlos.
 
-4. **Redactar la seccion de uso basico.** El caso de uso mas simple para que el lector vea resultados rapido:
+4. **Redactar la sección de uso básico.** El caso de uso más simple para que el lector vea resultados rápido:
 
-   - Ejemplo minimo funcional (de principio a fin).
-   - Explicacion de que hace cada paso.
+   - Ejemplo mínimo funcional (de principio a fin).
+   - Explicación de qué hace cada paso.
    - Resultado esperado para que el lector pueda verificar.
 
-5. **Redactar la seccion de uso avanzado.** Funcionalidades menos obvias pero importantes:
+5. **Redactar la sección de uso avanzado.** Funcionalidades menos obvias pero importantes:
 
    - Configuraciones avanzadas.
    - Integraciones con otras herramientas.
-   - Personalizacion y extension.
+   - Personalización y extensión.
    - Patrones de uso recomendados.
 
-6. **Redactar la seccion de troubleshooting.** Los problemas mas comunes y sus soluciones:
+6. **Redactar la sección de troubleshooting.** Los problemas más comunes y sus soluciones:
 
-   | Problema | Causa probable | Solucion |
+   | Problema | Causa probable | Solución |
    |----------|---------------|----------|
-   | Error X al arrancar | Falta variable de entorno Y | Anadir Y al fichero .env |
-   | La pagina no carga | Puerto ocupado | Cambiar el puerto en config |
+   | Error X al arrancar | Falta variable de entorno Y | Añadir Y al fichero .env |
+   | La página no carga | Puerto ocupado | Cambiar el puerto en config |
 
-   Esta seccion se alimenta de las preguntas reales de los usuarios. Si no hay historico, anticipar los problemas mas probables.
+   Esta sección se alimenta de las preguntas reales de los usuarios. Si no hay histórico, anticipar los problemas más probables.
 
 7. **Redactar FAQ.** Preguntas frecuentes que no encajan en las secciones anteriores. Formato pregunta-respuesta, directo y conciso.
 
-8. **Revisar con un lector fresco.** Si es posible, pedir a alguien que no conoce el proyecto que siga la guia y reporte donde se atasca.
+8. **Revisar con un lector fresco.** Si es posible, pedir a alguien que no conoce el proyecto que siga la guía y reporte dónde se atasca.
 
-## Criterios de exito
+## Criterios de éxito
 
-- La guia cubre instalacion, configuracion, uso basico, uso avanzado y troubleshooting.
-- Los pasos de instalacion son reproducibles (se pueden seguir de cero a funcionando).
+- La guía cubre instalación, configuración, uso básico, uso avanzado y troubleshooting.
+- Los pasos de instalación son reproducibles (se pueden seguir de cero a funcionando).
 - Los ejemplos son funcionales y se pueden copiar directamente.
-- El lenguaje esta adaptado al publico objetivo.
+- El lenguaje está adaptado al público objetivo.
 - Los problemas comunes tienen soluciones documentadas.

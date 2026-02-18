@@ -10,7 +10,7 @@
 
 ## Opciones evaluadas
 
-### Opcion 1: {{nombre_opcion_1}}
+### Opción 1: {{nombre_opcion_1}}
 
 {{descripcion_opcion_1}}
 
@@ -20,7 +20,7 @@
 **Desventajas:**
 {{desventajas_1}}
 
-### Opcion 2: {{nombre_opcion_2}}
+### Opción 2: {{nombre_opcion_2}}
 
 {{descripcion_opcion_2}}
 
@@ -30,7 +30,7 @@
 **Desventajas:**
 {{desventajas_2}}
 
-### Opcion 3: {{nombre_opcion_3}}
+### Opción 3: {{nombre_opcion_3}}
 
 {{descripcion_opcion_3}}
 
@@ -40,11 +40,11 @@
 **Desventajas:**
 {{desventajas_3}}
 
-## Decision
+## Decisión
 
 {{decision_tomada}}
 
-## Justificacion
+## Justificación
 
 {{razonamiento}}
 

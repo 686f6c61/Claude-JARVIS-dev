@@ -12,7 +12,7 @@
 
 {{contexto_negocio}}
 
-## Solucion propuesta
+## Solución propuesta
 
 {{descripcion_solucion}}
 
@@ -20,19 +20,19 @@
 
 {{historias_de_usuario}}
 
-## Criterios de aceptacion
+## Criterios de aceptación
 
 {{criterios_aceptacion}}
 
-## Metricas de exito
+## Métricas de éxito
 
-| Metrica | Valor objetivo | Como se mide |
+| Métrica | Valor objetivo | Cómo se mide |
 |---------|---------------|--------------|
 | {{metrica_1}} | {{valor_1}} | {{medicion_1}} |
 
 ## Riesgos y mitigaciones
 
-| Riesgo | Probabilidad | Impacto | Mitigacion |
+| Riesgo | Probabilidad | Impacto | Mitigación |
 |--------|-------------|---------|------------|
 | {{riesgo_1}} | {{prob_1}} | {{impacto_1}} | {{mitigacion_1}} |
 
