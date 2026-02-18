@@ -639,6 +639,87 @@ footer a {
   color: var(--text-muted);
 }
 
+/* ── Como se usa ─────────────────────────────────── */
+.use-cases-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 48px;
+}
+
+.use-case-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 32px;
+  transition: all 0.25s;
+}
+
+.use-case-card:hover {
+  border-color: var(--border-light);
+  background: var(--bg-card-hover);
+}
+
+.use-case-card.use-case-wide {
+  grid-column: 1 / -1;
+}
+
+.use-case-label {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-bottom: 14px;
+}
+
+.use-case-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+}
+
+.use-case-cmd {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--blue);
+  background: rgba(91, 156, 245, 0.06);
+  border: 1px solid rgba(91, 156, 245, 0.12);
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin: 14px 0;
+  display: block;
+}
+
+.use-case-steps {
+  list-style: none;
+  padding: 0;
+}
+
+.use-case-steps li {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 4px 0;
+  padding-left: 18px;
+  position: relative;
+}
+
+.use-case-steps li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-light);
+}
+
 /* ── Animaciones ─────────────────────────────────── */
 .fade-in {
   opacity: 0;
@@ -663,6 +744,7 @@ footer a {
   .skills-domains { grid-template-columns: 1fr; }
   .infra-grid { grid-template-columns: 1fr; }
   .gates-grid { grid-template-columns: 1fr; }
+  .use-cases-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
@@ -683,6 +765,7 @@ footer a {
       <li><a href="#skills">Skills</a></li>
       <li><a href="#gates">Gates</a></li>
       <li><a href="#infra">Infra</a></li>
+      <li><a href="#uso">Uso</a></li>
     </ul>
     <span class="nav-version">v0.1.0</span>
   </div>
@@ -1307,6 +1390,117 @@ footer a {
         <div class="gate-icon" style="border-color: var(--green);"><div style="width:8px;height:8px;background:var(--green);border-radius:50%;"></div></div>
         <div class="gate-text"><strong>Swift</strong> -- SPM. Vapor.</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Como se usa ────────────────────────────── -->
+<section id="uso" style="padding: 100px 0;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label" style="color: var(--cyan);">En la practica</div>
+      <h2 class="section-title">Como se usa</h2>
+      <p class="section-desc">
+        Escenarios reales de uso paso a paso. Cada caso muestra el flujo completo
+        desde la invocacion hasta el resultado.
+      </p>
+    </div>
+    <div class="use-cases-grid">
+
+      <!-- 1. Feature completa -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--blue); background: rgba(91,156,245,0.08);">Desarrollo</div>
+        <div class="use-case-title">Desarrollar una feature completa</div>
+        <code class="use-case-cmd">/alfred feature sistema de notificaciones push</code>
+        <ul class="use-case-steps">
+          <li>El product-owner genera el PRD con historias de usuario y criterios de aceptacion</li>
+          <li>El architect diseña la solucion y el security-officer valida el diseño</li>
+          <li>El senior-dev implementa siguiendo TDD estricto (rojo-verde-refactor)</li>
+          <li>QA y seguridad auditan en paralelo antes de dar el visto bueno</li>
+          <li>El tech-writer documenta la API y el devops-engineer prepara el despliegue</li>
+        </ul>
+      </div>
+
+      <!-- 2. Correccion de bug -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--red); background: rgba(229,86,79,0.08);">Correccion</div>
+        <div class="use-case-title">Corregir un bug</div>
+        <code class="use-case-cmd">/alfred fix el login falla con emails que tienen tildes</code>
+        <ul class="use-case-steps">
+          <li>El senior-dev reproduce el error e identifica la causa raiz</li>
+          <li>Escribe un test que falla reproduciendo el bug exacto</li>
+          <li>Implementa la correccion minima que hace pasar el test</li>
+          <li>QA y seguridad validan que no se hayan introducido regresiones</li>
+        </ul>
+      </div>
+
+      <!-- 3. Investigacion tecnica -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--purple); background: rgba(160,126,232,0.08);">Investigacion</div>
+        <div class="use-case-title">Investigacion tecnica (spike)</div>
+        <code class="use-case-cmd">/alfred spike evaluar si migrar de REST a gRPC</code>
+        <ul class="use-case-steps">
+          <li>El architect y el senior-dev exploran las alternativas sin compromiso de codigo</li>
+          <li>Se generan pruebas de concepto ligeras para comparar rendimiento</li>
+          <li>Se documenta un ADR con los hallazgos, pros, contras y recomendacion</li>
+          <li>El usuario decide si proceder a implementacion o descartarlo</li>
+        </ul>
+      </div>
+
+      <!-- 4. Auditoria del proyecto -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--orange); background: rgba(232,164,74,0.08);">Auditoria</div>
+        <div class="use-case-title">Auditar el proyecto</div>
+        <code class="use-case-cmd">/alfred audit</code>
+        <ul class="use-case-steps">
+          <li>4 agentes trabajan en paralelo: QA, seguridad, arquitectura y documentacion</li>
+          <li>QA busca errores logicos, code smells y cobertura de tests</li>
+          <li>Seguridad analiza OWASP Top 10, dependencias con CVEs y compliance RGPD/NIS2</li>
+          <li>Se consolida un informe unico con hallazgos priorizados por severidad</li>
+        </ul>
+      </div>
+
+      <!-- 5. Preparar entrega -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--green); background: rgba(78,201,144,0.08);">Entrega</div>
+        <div class="use-case-title">Preparar una entrega</div>
+        <code class="use-case-cmd">/alfred ship</code>
+        <ul class="use-case-steps">
+          <li>Auditoria final obligatoria: QA y seguridad deben aprobar</li>
+          <li>El tech-writer actualiza el changelog y genera las notas de release</li>
+          <li>El devops-engineer empaqueta, configura el pipeline y verifica el build</li>
+          <li>Despliegue supervisado: el usuario confirma antes de subir a produccion</li>
+        </ul>
+      </div>
+
+      <!-- 6. Modo conversacional -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--gold); background: rgba(201,169,110,0.08);">Conversacional</div>
+        <div class="use-case-title">Asistente contextual</div>
+        <code class="use-case-cmd">/alfred</code>
+        <ul class="use-case-steps">
+          <li>Alfred detecta el stack del proyecto y el estado de la sesion activa</li>
+          <li>Pregunta que necesitas y ofrece opciones adaptadas al contexto</li>
+          <li>Interpreta tu respuesta en lenguaje natural y lanza el flujo adecuado</li>
+          <li>Tambien puedes decir "usa el plugin de Alfred" en cualquier momento</li>
+        </ul>
+      </div>
+
+      <!-- 7. Proteccion automatica -->
+      <div class="use-case-card use-case-wide fade-in">
+        <div class="use-case-label" style="color: var(--cyan); background: rgba(78,201,201,0.08);">Automatico</div>
+        <div class="use-case-title">Proteccion en segundo plano</div>
+        <p style="font-size: 14px; color: var(--text-muted); margin: 10px 0 14px;">
+          Sin necesidad de ejecutar ningun comando, Alfred vigila automaticamente tu sesion de trabajo
+          mediante hooks que se activan en cada operacion relevante.
+        </p>
+        <ul class="use-case-steps" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 24px;">
+          <li><strong style="color: var(--text);">Guardia de secretos</strong> -- bloquea la escritura de API keys, tokens o contraseñas en el codigo</li>
+          <li><strong style="color: var(--text);">Quality gate</strong> -- verifica que los tests pasen despues de cada cambio significativo</li>
+          <li><strong style="color: var(--text);">Vigilancia de dependencias</strong> -- detecta nuevas librerias y notifica al auditor de seguridad</li>
+        </ul>
+      </div>
+
     </div>
   </div>
 </section>
