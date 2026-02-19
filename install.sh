@@ -18,7 +18,7 @@ set -euo pipefail
 
 REPO="686f6c61/Claude-JARVIS-dev"
 PLUGIN_NAME="alfred-dev"
-VERSION="0.1.2"
+VERSION="0.1.4"
 CLAUDE_DIR="${HOME}/.claude"
 PLUGINS_DIR="${CLAUDE_DIR}/plugins"
 CACHE_DIR="${PLUGINS_DIR}/cache/${PLUGIN_NAME}"
@@ -159,7 +159,7 @@ for dir in agents commands skills hooks core templates; do
         cp -r "${TEMP_DIR}/${dir}" "${MARKETPLACE_DIR}/"
     fi
 done
-for file in README.md package.json .gitignore uninstall.sh; do
+for file in README.md package.json .gitignore uninstall.sh uninstall.ps1; do
     if [ -f "${TEMP_DIR}/${file}" ]; then
         cp "${TEMP_DIR}/${file}" "${MARKETPLACE_DIR}/"
     fi

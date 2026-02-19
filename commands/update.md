@@ -49,16 +49,36 @@ Informa de que no hay actualizaciones disponibles y muestra la version actual. F
 
 ## Paso 4: ejecutar la actualizacion
 
-Si el usuario acepta, ejecuta con Bash:
+Si el usuario acepta, primero detecta la plataforma y despues ejecuta el instalador correspondiente.
+
+### Deteccion de plataforma
+
+Ejecuta con Bash:
+
+```bash
+uname -s 2>/dev/null || echo "Windows"
+```
+
+- Si devuelve `Darwin` o `Linux`: es macOS o Linux, usa el instalador bash.
+- Si falla o devuelve `Windows` / `MINGW` / `MSYS` / `CYGWIN`: es Windows, usa el instalador PowerShell.
+
+### macOS / Linux
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash
+```
+
+### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex
 ```
 
 Despues de que termine, informa al usuario de que **debe reiniciar Claude Code** (cerrar y volver a abrir) para que los cambios surtan efecto. Los plugins se cargan al inicio de sesion.
 
 ## Notas
 
-- El `install.sh` es idempotente: sobreescribe la instalacion anterior sin conflictos.
+- Los instaladores son idempotentes: sobreescriben la instalacion anterior sin conflictos.
 - No hace falta desinstalar primero.
 - Si el script de instalacion falla, muestra el error completo al usuario.
+- En Windows tambien funciona con WSL o Git Bash usando el instalador bash.

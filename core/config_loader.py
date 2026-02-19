@@ -71,6 +71,17 @@ DEFAULT_CONFIG = {
         "verbosidad": "normal",
         "idioma": "es",
     },
+    # Agentes opcionales: predefinidos que el usuario activa según su proyecto.
+    # Todos desactivados por defecto; se activan con /alfred config o por
+    # descubrimiento contextual al iniciar el plugin en un proyecto nuevo.
+    "agentes_opcionales": {
+        "data-engineer": False,
+        "ux-reviewer": False,
+        "performance-engineer": False,
+        "github-manager": False,
+        "seo-specialist": False,
+        "copywriter": False,
+    },
     "notas": "",
 }
 
@@ -643,3 +654,186 @@ def _detect_python_details(project_dir, stack):
     found = _find_first_match(py_test_runners, deps_lower)
     if found:
         stack["test_runner"] = found
+
+
+# --- Descubrimiento contextual de agentes opcionales ----------------------
+
+# Frameworks que implican una interfaz de usuario visible para el visitante.
+# Se usa para sugerir ux-reviewer y seo-specialist.
+_FRONTEND_FRAMEWORKS = {
+    "next", "nuxt", "astro", "remix", "gatsby", "svelte",
+    "solid-js", "qwik", "vue", "react", "angular",
+}
+
+
+def _has_git_remote(project_dir):
+    """Comprueba si el proyecto tiene un remote Git configurado.
+
+    Lee directamente el fichero .git/config para evitar dependencias de
+    subprocesos. Busca la presencia de cualquier sección [remote "..."].
+
+    Args:
+        project_dir: ruta al directorio raíz del proyecto.
+
+    Returns:
+        True si hay al menos un remote configurado, False en caso contrario.
+    """
+    git_config = os.path.join(project_dir, ".git", "config")
+    if not os.path.isfile(git_config):
+        return False
+    try:
+        with open(git_config, "r", encoding="utf-8") as f:
+            return '[remote "' in f.read()
+    except (OSError, IOError):
+        return False
+
+
+def _has_public_html(project_dir):
+    """Detecta si el proyecto tiene contenido web público.
+
+    Busca indicadores comunes de sitios web estáticos o landing pages:
+    ficheros HTML en la raíz o en directorios típicos (public/, site/, dist/).
+
+    Args:
+        project_dir: ruta al directorio raíz del proyecto.
+
+    Returns:
+        True si se detectan ficheros HTML públicos, False en caso contrario.
+    """
+    # Ficheros HTML directos en la raíz
+    for name in ("index.html", "index.htm"):
+        if os.path.isfile(os.path.join(project_dir, name)):
+            return True
+
+    # Directorios típicos de contenido público
+    for dirname in ("public", "site", "dist", "docs"):
+        dirpath = os.path.join(project_dir, dirname)
+        if os.path.isdir(dirpath):
+            for entry in os.listdir(dirpath):
+                if entry.endswith((".html", ".htm")):
+                    return True
+
+    return False
+
+
+def _count_source_files(project_dir):
+    """Cuenta ficheros de código fuente en el proyecto (no recursivo profundo).
+
+    Recorre hasta 2 niveles de profundidad para evitar latencia excesiva
+    en proyectos con node_modules o directorios de dependencias grandes.
+    Ignora directorios de dependencias y artefactos conocidos.
+
+    Args:
+        project_dir: ruta al directorio raíz del proyecto.
+
+    Returns:
+        int con el número de ficheros de código fuente encontrados.
+    """
+    source_extensions = {
+        ".py", ".js", ".ts", ".jsx", ".tsx", ".rs", ".go",
+        ".rb", ".ex", ".exs", ".java", ".kt", ".swift", ".cs",
+        ".vue", ".svelte", ".astro", ".php", ".c", ".cpp", ".h",
+    }
+    skip_dirs = {
+        "node_modules", ".git", "dist", "build", ".next", "__pycache__",
+        ".venv", "venv", "vendor", "target", ".cargo",
+    }
+    count = 0
+    try:
+        for entry in os.scandir(project_dir):
+            if entry.is_file() and os.path.splitext(entry.name)[1] in source_extensions:
+                count += 1
+            elif entry.is_dir() and entry.name not in skip_dirs:
+                try:
+                    for sub in os.scandir(entry.path):
+                        if sub.is_file() and os.path.splitext(sub.name)[1] in source_extensions:
+                            count += 1
+                        elif sub.is_dir() and sub.name not in skip_dirs:
+                            try:
+                                for deep in os.scandir(sub.path):
+                                    if deep.is_file() and os.path.splitext(deep.name)[1] in source_extensions:
+                                        count += 1
+                            except (OSError, PermissionError):
+                                pass
+                except (OSError, PermissionError):
+                    pass
+    except (OSError, PermissionError):
+        pass
+    return count
+
+
+def suggest_optional_agents(project_dir, current_config=None):
+    """Analiza el proyecto y sugiere agentes opcionales relevantes.
+
+    Examina el stack tecnológico, la presencia de base de datos, frontend,
+    contenido web público, remote Git y tamaño del proyecto para recomendar
+    qué agentes opcionales podrían ser útiles.
+
+    Solo sugiere agentes que no estén ya activados en la configuración actual.
+
+    Args:
+        project_dir: ruta al directorio raíz del proyecto.
+        current_config: diccionario de configuración actual (opcional).
+            Si se proporciona, se filtran los agentes ya activos.
+
+    Returns:
+        Lista de tuplas (nombre_agente, razon) con las sugerencias.
+        Cada tupla contiene el identificador del agente y una cadena
+        explicando por qué se sugiere.
+
+    Ejemplo:
+        >>> suggestions = suggest_optional_agents("/mi-proyecto-next")
+        >>> suggestions
+        [('ux-reviewer', 'Proyecto con frontend Next.js'),
+         ('github-manager', 'Repositorio con remote en GitHub')]
+    """
+    if current_config is None:
+        current_config = copy.deepcopy(DEFAULT_CONFIG)
+
+    active = current_config.get("agentes_opcionales", {})
+    stack = detect_stack(project_dir)
+    suggestions = []
+
+    # Base de datos / ORM → data-engineer
+    if not active.get("data-engineer") and stack.get("orm", "ninguno") != "ninguno":
+        suggestions.append((
+            "data-engineer",
+            f"Usas {stack['orm']} como ORM: te ayuda con esquemas, migraciones y queries"
+        ))
+
+    # Frontend → ux-reviewer
+    framework = stack.get("framework", "desconocido")
+    if not active.get("ux-reviewer") and framework in _FRONTEND_FRAMEWORKS:
+        suggestions.append((
+            "ux-reviewer",
+            f"Proyecto con {framework}: revisa accesibilidad, usabilidad y flujos de usuario"
+        ))
+
+    # Contenido web público → seo-specialist, copywriter
+    if _has_public_html(project_dir):
+        if not active.get("seo-specialist"):
+            suggestions.append((
+                "seo-specialist",
+                "Contenido web público detectado: optimiza SEO, meta tags y datos estructurados"
+            ))
+        if not active.get("copywriter"):
+            suggestions.append((
+                "copywriter",
+                "Textos públicos detectados: mejora copys, CTAs y tono de comunicación"
+            ))
+
+    # Remote Git → github-manager
+    if not active.get("github-manager") and _has_git_remote(project_dir):
+        suggestions.append((
+            "github-manager",
+            "Repositorio con remote: gestiona PRs, releases, issues y configuración de repo"
+        ))
+
+    # Proyecto grande → performance-engineer
+    if not active.get("performance-engineer") and _count_source_files(project_dir) > 50:
+        suggestions.append((
+            "performance-engineer",
+            "Proyecto con más de 50 ficheros fuente: ayuda con profiling, benchmarks y optimización"
+        ))
+
+    return suggestions

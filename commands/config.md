@@ -1,5 +1,5 @@
 ---
-description: "Configura Alfred Dev: autonomía, stack, compliance y personalidad"
+description: "Configura Alfred Dev: autonomía, stack, agentes opcionales y personalidad"
 ---
 
 # Configuración de Alfred Dev
@@ -10,10 +10,55 @@ Presenta al usuario la configuración actual organizada en secciones:
 
 1. **Autonomía por fase** (interactivo/semi-autónomo/autónomo): producto, arquitectura, desarrollo, seguridad, calidad, documentación, devops
 2. **Proyecto** (detectado o manual): nombre, lenguaje, framework, runtime, gestor de paquetes, base de datos, ORM
-3. **Compliance**: RGPD, NIS2, CRA, sector, jurisdicción
-4. **Integraciones**: CI, contenedores, registro, hosting, monitoring
-5. **Personalidad**: nivel de sarcasmo (1-5), celebrar victorias, insultar malas prácticas
+3. **Agentes opcionales**: data-engineer, ux-reviewer, performance-engineer, github-manager, seo-specialist, copywriter
+4. **Compliance**: RGPD, NIS2, CRA, sector, jurisdicción
+5. **Integraciones**: CI, contenedores, registro, hosting, monitoring
+6. **Personalidad**: nivel de sarcasmo (1-5), celebrar victorias, insultar malas prácticas
 
 Usa AskUserQuestion para preguntar qué sección quiere modificar. Después de cada cambio, actualiza el fichero .local.md.
 
 Si el proyecto no tiene configuración y hay ficheros en el directorio actual, ejecuta detección automática de stack y presenta los resultados al usuario para confirmar.
+
+## Sección de agentes opcionales
+
+Alfred Dev tiene 8 agentes de núcleo (siempre activos) y 6 agentes opcionales que el usuario puede activar según las necesidades de su proyecto. Los agentes opcionales son predefinidos: vienen con el plugin pero no se activan hasta que el usuario lo decide.
+
+### Agentes opcionales disponibles
+
+| Agente | Rol | Cuándo es útil |
+|--------|-----|----------------|
+| **data-engineer** | Ingeniero de datos | Proyectos con base de datos, ORM, migraciones |
+| **ux-reviewer** | Revisor de UX | Proyectos con frontend (React, Vue, Svelte, etc.) |
+| **performance-engineer** | Ingeniero de rendimiento | Proyectos grandes o con requisitos de rendimiento |
+| **github-manager** | Gestor de GitHub | Cualquier proyecto con repositorio en GitHub |
+| **seo-specialist** | Especialista SEO | Proyectos web con contenido público |
+| **copywriter** | Copywriter | Proyectos con textos públicos: landing, emails, onboarding |
+
+### Descubrimiento contextual
+
+Si es la primera vez que el usuario configura el plugin en un proyecto (o si no tiene agentes opcionales activados), ejecuta el descubrimiento contextual:
+
+1. Analiza el proyecto: stack, presencia de BD/ORM, frontend, contenido web público, remote Git, tamaño del proyecto.
+2. Basándote en el análisis, sugiere qué agentes opcionales podrían ser útiles. Explica brevemente por qué cada uno es relevante para este proyecto concreto.
+3. Presenta las sugerencias al usuario con AskUserQuestion (multiSelect: true) para que elija cuáles activar.
+4. Guarda la selección en el fichero .local.md bajo la clave `agentes_opcionales`.
+
+### Gestión manual
+
+Si el usuario elige la sección de agentes opcionales desde el menú principal:
+
+1. Muestra el estado actual (activo/inactivo) de cada agente opcional.
+2. Usa AskUserQuestion (multiSelect: true) con los 6 agentes como opciones, preseleccionando los que ya están activos.
+3. Actualiza el fichero .local.md con la nueva selección.
+
+### Formato en el fichero .local.md
+
+```yaml
+agentes_opcionales:
+  data-engineer: true
+  ux-reviewer: false
+  performance-engineer: false
+  github-manager: true
+  seo-specialist: true
+  copywriter: false
+```

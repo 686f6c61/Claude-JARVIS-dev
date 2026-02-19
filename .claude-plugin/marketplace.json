@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "alfred-dev",
-      "description": "Plugin que simula una empresa de ingeniería de software completa con 8 agentes especializados, quality gates y compliance europeo integrado.",
-      "version": "0.1.2",
+      "description": "Plugin de ingeniería de software completa: 14 agentes (8 de núcleo + 6 opcionales), 56 skills, quality gates y compliance europeo integrado.",
+      "version": "0.1.4",
       "source": "./",
       "author": {
         "name": "686f6c61"

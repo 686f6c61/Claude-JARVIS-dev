@@ -56,6 +56,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/spelling-guard.py",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }

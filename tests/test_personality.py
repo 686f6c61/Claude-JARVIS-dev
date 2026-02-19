@@ -12,11 +12,41 @@ from core.personality import get_agent_intro, get_agent_voice, AGENTS
 
 class TestPersonality(unittest.TestCase):
     def test_all_agents_defined(self):
-        expected = {
+        # Núcleo: 8 agentes siempre activos
+        core = {
             "alfred", "product-owner", "architect", "senior-dev",
             "security-officer", "qa-engineer", "devops-engineer", "tech-writer",
         }
-        self.assertEqual(set(AGENTS.keys()), expected)
+        # Opcionales: 6 agentes predefinidos que el usuario activa
+        optional = {
+            "data-engineer", "ux-reviewer", "performance-engineer",
+            "github-manager", "seo-specialist", "copywriter",
+        }
+        self.assertEqual(set(AGENTS.keys()), core | optional)
+
+    def test_optional_agents_have_flag(self):
+        """Los agentes opcionales deben tener el campo 'opcional': True."""
+        optional_names = {
+            "data-engineer", "ux-reviewer", "performance-engineer",
+            "github-manager", "seo-specialist", "copywriter",
+        }
+        for name in optional_names:
+            self.assertTrue(
+                AGENTS[name].get("opcional", False),
+                f"El agente '{name}' debería tener opcional=True"
+            )
+
+    def test_core_agents_not_optional(self):
+        """Los agentes del núcleo no deben tener el campo 'opcional'."""
+        core_names = {
+            "alfred", "product-owner", "architect", "senior-dev",
+            "security-officer", "qa-engineer", "devops-engineer", "tech-writer",
+        }
+        for name in core_names:
+            self.assertFalse(
+                AGENTS[name].get("opcional", False),
+                f"El agente '{name}' no debería ser opcional"
+            )
 
     def test_intro_respects_sarcasm_level(self):
         intro_low = get_agent_intro("alfred", nivel_sarcasmo=1)
