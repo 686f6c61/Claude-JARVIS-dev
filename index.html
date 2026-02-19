@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alfred Dev - Tus compañeros de desarrollo en un plugin</title>
-<meta name="description" content="Plugin de Claude Code que simula un equipo completo de ingeniería de software. 8 agentes especializados, quality gates infranqueables, compliance RGPD/NIS2/CRA.">
+<meta name="description" content="Plugin de Claude Code con 14 agentes especializados (8 de núcleo + 6 opcionales) y 56 skills que te acompañan en todo el ciclo de desarrollo: producto, arquitectura, desarrollo TDD, calidad, seguridad, documentación, despliegue, datos, UX, rendimiento, GitHub, SEO y copywriting.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Libre+Baskerville:ital,wght@0,400;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -158,6 +158,27 @@ nav .container {
   border-radius: 50%;
 }
 
+.hero-badge-alt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gold);
+  background: rgba(201,169,110,0.08);
+  border: 1px solid rgba(201,169,110,0.15);
+  padding: 6px 16px;
+  border-radius: 20px;
+}
+
+.hero-badge-alt::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+}
+
 .hero h1 {
   font-family: var(--font-display);
   font-size: clamp(44px, 6.5vw, 72px);
@@ -196,7 +217,7 @@ nav .container {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  user-select: all;
+  position: relative;
 }
 
 .hero-cta:hover {
@@ -204,9 +225,35 @@ nav .container {
   background: var(--bg-card-hover);
 }
 
+.hero-cta-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .hero-cta .copy-hint {
   color: var(--text-dim);
   font-size: 11px;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.hero-cta.copied .copy-hint {
+  color: var(--green);
+}
+
+.hero-cta-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ── Stats ────────────────────────────────────────── */
@@ -411,6 +458,31 @@ section {
 }
 
 .flow-dot.active { background: var(--blue); }
+
+.flow-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  grid-column: 1 / -1;
+}
+
+.flow-stage {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.flow-stage-num {
+  color: var(--blue-dim);
+  margin-right: 4px;
+}
 
 /* ── Skills ───────────────────────────────────────── */
 .skills-domains {
@@ -720,6 +792,198 @@ footer a {
   background: var(--border-light);
 }
 
+/* ── Tabs de instalacion ─────────────────────────── */
+.install-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.install-tab {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.install-tab:hover {
+  color: var(--text-bright);
+}
+
+.install-tab.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+.install-panel {
+  display: none;
+}
+
+.install-panel.active {
+  display: block;
+}
+
+.install-cmd {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--blue);
+  background: rgba(91, 156, 245, 0.06);
+  border: 1px solid rgba(91, 156, 245, 0.12);
+  border-radius: 6px;
+  padding: 14px 20px;
+  margin: 16px 0;
+  display: block;
+  word-break: break-all;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.install-cmd:hover {
+  border-color: var(--blue-dim);
+}
+
+.install-reqs {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-top: 12px;
+}
+
+.install-reqs strong {
+  color: var(--text);
+}
+
+.uninstall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.uninstall-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.uninstall-card h4 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 10px;
+}
+
+.uninstall-card code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--red);
+  background: rgba(229, 86, 79, 0.06);
+  border: 1px solid rgba(229, 86, 79, 0.12);
+  border-radius: 4px;
+  padding: 8px 12px;
+  display: block;
+  word-break: break-all;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.uninstall-card code:hover {
+  border-color: var(--red);
+}
+
+/* ── FAQ ─────────────────────────────────────────── */
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.faq-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.faq-item:hover {
+  border-color: var(--border-light);
+}
+
+.faq-question {
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-bright);
+  background: none;
+  border: none;
+  padding: 16px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: color 0.2s;
+}
+
+.faq-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--blue-dim);
+  transition: color 0.2s;
+}
+
+.faq-item:hover .faq-icon {
+  color: var(--blue);
+}
+
+.faq-question-text {
+  flex: 1;
+}
+
+.faq-question:hover {
+  color: var(--blue);
+}
+
+.faq-question::after {
+  content: '+';
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  margin-left: 12px;
+  transition: transform 0.2s;
+}
+
+.faq-item.open .faq-question::after {
+  content: '-';
+}
+
+.faq-answer {
+  display: none;
+  padding: 0 20px 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.faq-item.open .faq-answer {
+  display: block;
+}
+
 /* ── Animaciones ─────────────────────────────────── */
 .fade-in {
   opacity: 0;
@@ -766,23 +1030,34 @@ footer a {
       <li><a href="#gates">Gates</a></li>
       <li><a href="#infra">Infra</a></li>
       <li><a href="#uso">Uso</a></li>
+      <li><a href="#instalar">Instalar</a></li>
+      <li><a href="#faq">FAQ</a></li>
     </ul>
-    <span class="nav-version">v0.1.2</span>
+    <span class="nav-version">v0.1.4</span>
   </div>
 </nav>
 
 <!-- ─── Hero ───────────────────────────────────── -->
 <header class="hero">
   <div class="container">
-    <div class="hero-badge">Plugin de Claude Code</div>
+    <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 32px;">
+      <div class="hero-badge" style="margin-bottom: 0;">Plugin de Claude Code</div>
+      <div class="hero-badge-alt">Plugin OpenCode <span style="font-size: 10px; opacity: 0.7;">(en desarrollo)</span></div>
+    </div>
     <h1>Tus compañeros de<br>desarrollo en un <em>plugin</em></h1>
     <p class="hero-subtitle">
-      8 agentes especializados con personalidad propia. Quality gates infranqueables.
-      Compliance RGPD, NIS2 y CRA integrado. Todo el ciclo de desarrollo de software,
-      de la idea a producción.
+      14 agentes especializados con personalidad propia. 8 de núcleo, 6 opcionales que
+      activas según tu proyecto. Quality gates, 56 skills, de la idea a producción.
     </p>
-    <div class="hero-cta">
-      <span>curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash</span>
+    <div class="hero-cta" onclick="copyCmd(this)" data-cmd="curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash">
+      <span class="hero-cta-label">macOS / Linux</span>
+      <span class="hero-cta-text">curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash</span>
+      <span class="copy-hint">clic para copiar</span>
+    </div>
+    <div class="hero-cta" style="margin-top: 10px;" onclick="copyCmd(this)" data-cmd="irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex">
+      <span class="hero-cta-label">Windows</span>
+      <span class="hero-cta-text">irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex</span>
+      <span class="copy-hint">clic para copiar</span>
     </div>
   </div>
 </header>
@@ -792,11 +1067,11 @@ footer a {
   <div class="container">
     <div class="stats-grid">
       <div class="fade-in">
-        <div class="stat-number">8</div>
+        <div class="stat-number">14</div>
         <div class="stat-label">Agentes</div>
       </div>
       <div class="fade-in">
-        <div class="stat-number">29</div>
+        <div class="stat-number">56</div>
         <div class="stat-label">Skills</div>
       </div>
       <div class="fade-in">
@@ -804,7 +1079,7 @@ footer a {
         <div class="stat-label">Flujos</div>
       </div>
       <div class="fade-in">
-        <div class="stat-number">8</div>
+        <div class="stat-number">10</div>
         <div class="stat-label">Comandos</div>
       </div>
       <div class="fade-in">
@@ -812,12 +1087,12 @@ footer a {
         <div class="stat-label">Templates</div>
       </div>
       <div class="fade-in">
-        <div class="stat-number">5</div>
+        <div class="stat-number">6</div>
         <div class="stat-label">Hooks</div>
       </div>
       <div class="fade-in">
-        <div class="stat-number">3</div>
-        <div class="stat-label">Compliance</div>
+        <div class="stat-number">8</div>
+        <div class="stat-label">Gates</div>
       </div>
     </div>
   </div>
@@ -828,10 +1103,11 @@ footer a {
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-label">El equipo</div>
-      <h2 class="section-title">8 agentes especializados</h2>
+      <h2 class="section-title">8 agentes de núcleo</h2>
       <p class="section-desc">
         Cada agente tiene un rol definido, una personalidad propia y frases
         características. Trabajan coordinados por Alfred, el mayordomo jefe.
+        Siempre activos en cada flujo.
       </p>
     </div>
     <div class="agents-grid">
@@ -917,6 +1193,79 @@ footer a {
       </div>
 
     </div>
+
+    <!-- Agentes opcionales -->
+    <div class="section-header fade-in" style="margin-top: 64px;">
+      <div class="section-label" style="color: var(--gold);">Ampliables</div>
+      <h2 class="section-title">6 agentes opcionales</h2>
+      <p class="section-desc">
+        Roles especializados que activas según lo que necesite tu proyecto. Alfred analiza
+        tu stack y te sugiere cuáles activar. Se gestionan con <strong style="color: var(--blue);">/alfred config</strong>.
+      </p>
+    </div>
+    <div class="agents-grid">
+
+      <div class="agent-card fade-in" style="--agent-color: var(--orange)">
+        <div class="agent-header">
+          <span class="agent-name">El fontanero de datos</span>
+          <span class="agent-model">sonnet</span>
+        </div>
+        <div class="agent-alias">Data Engineer</div>
+        <div class="agent-role">Diseño de esquemas, migraciones con rollback obligatorio, optimización de queries. Si hay base de datos, hay trabajo.</div>
+        <div class="agent-phrase">"Una migración sin rollback es un billete de ida."</div>
+      </div>
+
+      <div class="agent-card fade-in" style="--agent-color: #ff69b4">
+        <div class="agent-header">
+          <span class="agent-name">El abogado del usuario</span>
+          <span class="agent-model">sonnet</span>
+        </div>
+        <div class="agent-alias">UX Reviewer</div>
+        <div class="agent-role">Auditoría WCAG 2.1 AA, heurísticas de Nielsen, revisión de flujos. Lo que es obvio para ti no lo es para el usuario.</div>
+        <div class="agent-phrase">"Si el usuario necesita un manual, has fallado."</div>
+      </div>
+
+      <div class="agent-card fade-in" style="--agent-color: var(--purple)">
+        <div class="agent-header">
+          <span class="agent-name">El cronómetro</span>
+          <span class="agent-model">sonnet</span>
+        </div>
+        <div class="agent-alias">Performance Engineer</div>
+        <div class="agent-role">Profiling, benchmarks con estadísticas reales (p50, p95, p99), análisis de bundles. Medir antes y después, siempre.</div>
+        <div class="agent-phrase">"Sin números no hay optimización, hay superstición."</div>
+      </div>
+
+      <div class="agent-card fade-in" style="--agent-color: var(--text-muted)">
+        <div class="agent-header">
+          <span class="agent-name">El portero</span>
+          <span class="agent-model">sonnet</span>
+        </div>
+        <div class="agent-alias">GitHub Manager</div>
+        <div class="agent-role">Configuración de repositorios, branch protection, PRs, releases, issue templates. Todo vía gh CLI, sin menciones a IA.</div>
+        <div class="agent-phrase">"Un repo sin protección de ramas es una ruleta rusa."</div>
+      </div>
+
+      <div class="agent-card fade-in" style="--agent-color: var(--green)">
+        <div class="agent-header">
+          <span class="agent-name">El rastreador</span>
+          <span class="agent-model">sonnet</span>
+        </div>
+        <div class="agent-alias">SEO Specialist</div>
+        <div class="agent-role">Meta tags, datos estructurados JSON-LD, Core Web Vitals, Lighthouse. Si Google no lo encuentra, no existe.</div>
+        <div class="agent-phrase">"Un canonical mal puesto y tienes contenido duplicado."</div>
+      </div>
+
+      <div class="agent-card fade-in" style="--agent-color: var(--cyan)">
+        <div class="agent-header">
+          <span class="agent-name">La pluma</span>
+          <span class="agent-model">sonnet</span>
+        </div>
+        <div class="agent-alias">Copywriter</div>
+        <div class="agent-role">Revisión de textos, CTAs efectivos, guía de tono. Ortografía impecable como prioridad absoluta. Sin teletienda.</div>
+        <div class="agent-phrase">"Si escribes 'aplicacion' sin tilde, no publiques."</div>
+      </div>
+
+    </div>
   </div>
 </section>
 
@@ -925,10 +1274,11 @@ footer a {
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-label">Flujos de trabajo</div>
-      <h2 class="section-title">5 flujos, 15 fases</h2>
+      <h2 class="section-title">5 flujos, 16 fases</h2>
       <p class="section-desc">
         Cada flujo tiene fases secuenciales con quality gates entre ellas.
-        Si una gate no se supera, el flujo no avanza.
+        Si una gate no se supera, el flujo no avanza. Los agentes opcionales
+        se integran automáticamente en las fases que les corresponden.
       </p>
     </div>
     <div class="flows-list">
@@ -947,6 +1297,14 @@ footer a {
           <div class="flow-dot active"></div>
           <div class="flow-dot active"></div>
         </div>
+        <div class="flow-stages">
+          <span class="flow-stage"><span class="flow-stage-num">1</span>Producto</span>
+          <span class="flow-stage"><span class="flow-stage-num">2</span>Arquitectura</span>
+          <span class="flow-stage"><span class="flow-stage-num">3</span>Desarrollo</span>
+          <span class="flow-stage"><span class="flow-stage-num">4</span>Calidad + Seguridad</span>
+          <span class="flow-stage"><span class="flow-stage-num">5</span>Documentación</span>
+          <span class="flow-stage"><span class="flow-stage-num">6</span>Entrega</span>
+        </div>
       </div>
 
       <div class="flow-card fade-in">
@@ -960,6 +1318,11 @@ footer a {
           <div class="flow-dot active"></div>
           <div class="flow-dot active"></div>
         </div>
+        <div class="flow-stages">
+          <span class="flow-stage"><span class="flow-stage-num">1</span>Diagnóstico</span>
+          <span class="flow-stage"><span class="flow-stage-num">2</span>Corrección TDD</span>
+          <span class="flow-stage"><span class="flow-stage-num">3</span>Validación</span>
+        </div>
       </div>
 
       <div class="flow-card fade-in">
@@ -971,6 +1334,10 @@ footer a {
         <div class="flow-phases">
           <div class="flow-dot active"></div>
           <div class="flow-dot active"></div>
+        </div>
+        <div class="flow-stages">
+          <span class="flow-stage"><span class="flow-stage-num">1</span>Investigación</span>
+          <span class="flow-stage"><span class="flow-stage-num">2</span>Hallazgos</span>
         </div>
       </div>
 
@@ -986,6 +1353,12 @@ footer a {
           <div class="flow-dot active"></div>
           <div class="flow-dot active"></div>
         </div>
+        <div class="flow-stages">
+          <span class="flow-stage"><span class="flow-stage-num">1</span>Auditoría</span>
+          <span class="flow-stage"><span class="flow-stage-num">2</span>Documentación</span>
+          <span class="flow-stage"><span class="flow-stage-num">3</span>Empaquetado</span>
+          <span class="flow-stage"><span class="flow-stage-num">4</span>Despliegue</span>
+        </div>
       </div>
 
       <div class="flow-card fade-in">
@@ -997,6 +1370,9 @@ footer a {
         <div class="flow-phases">
           <div class="flow-dot active"></div>
         </div>
+        <div class="flow-stages">
+          <span class="flow-stage"><span class="flow-stage-num">1</span>Auditoría paralela</span>
+        </div>
       </div>
 
     </div>
@@ -1007,70 +1383,96 @@ footer a {
 <section id="gates" class="gates-section">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-label">HARD-GATES</div>
-      <h2 class="section-title">Infranqueables</h2>
+      <div class="section-label">Quality gates</div>
+      <h2 class="section-title">Hacia dónde trabaja Alfred</h2>
       <p class="section-desc">
-        Las quality gates no se saltan. No hay excusas, no hay atajos,
-        no hay "luego lo hacemos". Si la gate falla, el flujo se detiene.
+        Alfred no da garantías absolutas, pero trabaja activamente para que estos
+        objetivos se cumplan en cada flujo. Si detecta que algo no cuadra,
+        detiene el avance y te avisa.
       </p>
     </div>
+    <!-- Gates del núcleo -->
+    <h3 class="fade-in" style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 20px;">Nucleo -- siempre activos</h3>
     <div class="gates-grid">
       <div class="gate-item fade-in">
         <div class="gate-icon"></div>
-        <div class="gate-text">Tests en verde obligatorios antes de avanzar a calidad</div>
+        <div class="gate-text">Intenta que los tests estén en verde antes de avanzar a calidad</div>
       </div>
       <div class="gate-item fade-in">
         <div class="gate-icon"></div>
-        <div class="gate-text">QA y seguridad deben aprobar antes de desplegar</div>
+        <div class="gate-text">Pasa revisión de QA y seguridad antes de proponer el despliegue</div>
       </div>
       <div class="gate-item fade-in">
         <div class="gate-icon"></div>
-        <div class="gate-text">Pipeline CI/CD verde como requisito de entrega</div>
+        <div class="gate-text">Busca que el pipeline CI/CD esté verde como requisito de entrega</div>
       </div>
       <div class="gate-item fade-in">
         <div class="gate-icon"></div>
-        <div class="gate-text">PRD aprobado por el usuario antes de diseñar</div>
+        <div class="gate-text">Pide aprobación del PRD al usuario antes de diseñar</div>
       </div>
       <div class="gate-item fade-in">
         <div class="gate-icon"></div>
-        <div class="gate-text">Security officer valida antes de pasar a desarrollo</div>
+        <div class="gate-text">El security officer revisa el diseño antes de pasar a desarrollo</div>
       </div>
       <div class="gate-item fade-in">
         <div class="gate-icon"></div>
-        <div class="gate-text">Cero vulnerabilidades OWASP críticas o altas</div>
+        <div class="gate-text">Revisa vulnerabilidades OWASP y alerta si encuentra críticas o altas</div>
       </div>
       <div class="gate-item fade-in">
         <div class="gate-icon"></div>
-        <div class="gate-text">Sin CVEs críticos en dependencias directas</div>
+        <div class="gate-text">Audita dependencias en busca de CVEs conocidos</div>
       </div>
       <div class="gate-item fade-in">
         <div class="gate-icon"></div>
-        <div class="gate-text">Compliance RGPD + NIS2 + CRA verificado</div>
+        <div class="gate-text">Comprueba aspectos de compliance RGPD, NIS2 y CRA según el contexto</div>
+      </div>
+      <div class="gate-item fade-in">
+        <div class="gate-icon"></div>
+        <div class="gate-text">Vigila cada escritura de fichero buscando secretos, API keys o tokens</div>
+      </div>
+      <div class="gate-item fade-in">
+        <div class="gate-icon"></div>
+        <div class="gate-text">Detecta tildes omitidas en castellano al escribir o editar ficheros</div>
       </div>
     </div>
 
-    <div class="compliance-badges fade-in">
-      <div class="compliance-badge">
-        <div class="compliance-badge-name">RGPD</div>
-        <div class="compliance-badge-desc">Protección de datos<br>desde el diseño</div>
+    <!-- Gates de agentes opcionales -->
+    <h3 class="fade-in" style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); margin: 40px 0 20px;">Opcionales -- cuando los activas</h3>
+    <div class="gates-grid">
+      <div class="gate-item fade-in" style="border-color: rgba(201,169,110,0.2);">
+        <div class="gate-icon" style="border-color: var(--gold);"><div style="width:8px;height:8px;background:var(--gold);border-radius:50%;"></div></div>
+        <div class="gate-text">Analiza el código con SonarQube (instala Docker si falta, con tu permiso)</div>
       </div>
-      <div class="compliance-badge">
-        <div class="compliance-badge-name">NIS2</div>
-        <div class="compliance-badge-desc">Ciberseguridad para<br>operadores esenciales</div>
+      <div class="gate-item fade-in" style="border-color: rgba(201,169,110,0.2);">
+        <div class="gate-icon" style="border-color: var(--gold);"><div style="width:8px;height:8px;background:var(--gold);border-radius:50%;"></div></div>
+        <div class="gate-text">Exige rollback en cada migración de base de datos antes de ejecutarla</div>
       </div>
-      <div class="compliance-badge">
-        <div class="compliance-badge-name">CRA</div>
-        <div class="compliance-badge-desc">Ciber-resiliencia para<br>productos digitales</div>
+      <div class="gate-item fade-in" style="border-color: rgba(201,169,110,0.2);">
+        <div class="gate-icon" style="border-color: var(--gold);"><div style="width:8px;height:8px;background:var(--gold);border-radius:50%;"></div></div>
+        <div class="gate-text">Verifica accesibilidad WCAG 2.1 AA antes de dar por buena la interfaz</div>
       </div>
-      <div class="compliance-badge">
-        <div class="compliance-badge-name">OWASP</div>
-        <div class="compliance-badge-desc">Top 10 vulnerabilidades<br>más explotadas</div>
+      <div class="gate-item fade-in" style="border-color: rgba(201,169,110,0.2);">
+        <div class="gate-icon" style="border-color: var(--gold);"><div style="width:8px;height:8px;background:var(--gold);border-radius:50%;"></div></div>
+        <div class="gate-text">Mide rendimiento con métricas reales (p50, p95, p99) antes y después</div>
       </div>
-      <div class="compliance-badge">
-        <div class="compliance-badge-name">SBOM</div>
-        <div class="compliance-badge-desc">Bill of Materials<br>de software</div>
+      <div class="gate-item fade-in" style="border-color: rgba(201,169,110,0.2);">
+        <div class="gate-icon" style="border-color: var(--gold);"><div style="width:8px;height:8px;background:var(--gold);border-radius:50%;"></div></div>
+        <div class="gate-text">Configura branch protection en main y exige PR con aprobación</div>
+      </div>
+      <div class="gate-item fade-in" style="border-color: rgba(201,169,110,0.2);">
+        <div class="gate-icon" style="border-color: var(--gold);"><div style="width:8px;height:8px;background:var(--gold);border-radius:50%;"></div></div>
+        <div class="gate-text">Monitoriza Core Web Vitals (LCP, INP, CLS) y alerta si están fuera de umbral</div>
+      </div>
+      <div class="gate-item fade-in" style="border-color: rgba(201,169,110,0.2);">
+        <div class="gate-icon" style="border-color: var(--gold);"><div style="width:8px;height:8px;background:var(--gold);border-radius:50%;"></div></div>
+        <div class="gate-text">Revisa meta tags, structured data y rastreabilidad SEO antes de publicar</div>
+      </div>
+      <div class="gate-item fade-in" style="border-color: rgba(201,169,110,0.2);">
+        <div class="gate-icon" style="border-color: var(--gold);"><div style="width:8px;height:8px;background:var(--gold);border-radius:50%;"></div></div>
+        <div class="gate-text">Valida ortografía, tono y consistencia de los textos de la interfaz</div>
       </div>
     </div>
+
   </div>
 </section>
 
@@ -1079,10 +1481,10 @@ footer a {
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-label">Capacidades</div>
-      <h2 class="section-title">29 skills en 7 dominios</h2>
+      <h2 class="section-title">56 skills en 13 dominios</h2>
       <p class="section-desc">
         Cada skill es una habilidad concreta que los agentes ejecutan.
-        Organizados por área de responsabilidad.
+        Los 7 dominios originales se amplían con 6 nuevos para los agentes opcionales.
       </p>
     </div>
     <div class="skills-domains">
@@ -1129,7 +1531,7 @@ footer a {
       <div class="domain-card fade-in">
         <div class="domain-header">
           <span class="domain-name">Seguridad</span>
-          <span class="domain-count">5 skills</span>
+          <span class="domain-count">6 skills</span>
         </div>
         <ul class="domain-skills">
           <li><span class="skill-name">threat-model</span> Modelado STRIDE</li>
@@ -1137,19 +1539,22 @@ footer a {
           <li><span class="skill-name">security-review</span> OWASP Top 10</li>
           <li><span class="skill-name">compliance-check</span> RGPD, NIS2, CRA</li>
           <li><span class="skill-name">sbom-generate</span> Software Bill of Materials</li>
+          <li><span class="skill-name">dependency-update</span> Actualización segura de dependencias</li>
         </ul>
       </div>
 
       <div class="domain-card fade-in">
         <div class="domain-header">
           <span class="domain-name">Calidad</span>
-          <span class="domain-count">4 skills</span>
+          <span class="domain-count">6 skills</span>
         </div>
         <ul class="domain-skills">
           <li><span class="skill-name">test-plan</span> Test plans por riesgo</li>
           <li><span class="skill-name">code-review</span> Review de calidad</li>
           <li><span class="skill-name">exploratory-test</span> Testing exploratorio</li>
           <li><span class="skill-name">regression-check</span> Análisis de regresión</li>
+          <li><span class="skill-name">sonarqube</span> Análisis con SonarQube + Docker</li>
+          <li><span class="skill-name">spelling-check</span> Verificación ortográfica (tildes)</li>
         </ul>
       </div>
 
@@ -1169,13 +1574,92 @@ footer a {
       <div class="domain-card fade-in">
         <div class="domain-header">
           <span class="domain-name">Documentación</span>
-          <span class="domain-count">4 skills</span>
+          <span class="domain-count">9 skills</span>
         </div>
         <ul class="domain-skills">
           <li><span class="skill-name">api-docs</span> Endpoints, params, ejemplos</li>
           <li><span class="skill-name">architecture-docs</span> Visión global del sistema</li>
           <li><span class="skill-name">user-guide</span> Instalación, uso, troubleshooting</li>
           <li><span class="skill-name">changelog</span> Keep a Changelog</li>
+          <li><span class="skill-name">project-docs</span> Documentación completa en docs/</li>
+          <li><span class="skill-name">glossary</span> Corpus lingüístico del proyecto</li>
+          <li><span class="skill-name">readme-review</span> Auditoría del README</li>
+          <li><span class="skill-name">onboarding-guide</span> Guía para nuevos developers</li>
+          <li><span class="skill-name">migration-guide</span> Migración entre versiones</li>
+        </ul>
+      </div>
+
+      <!-- Dominios de agentes opcionales -->
+      <div class="domain-card fade-in" style="border-color: rgba(201,169,110,0.25);">
+        <div class="domain-header">
+          <span class="domain-name">Datos</span>
+          <span class="domain-count" style="color: var(--gold); border-color: rgba(201,169,110,0.3);">3 skills</span>
+        </div>
+        <ul class="domain-skills">
+          <li><span class="skill-name">schema-design</span> Diseño de esquemas normalizados</li>
+          <li><span class="skill-name">migration-plan</span> Migraciones con rollback</li>
+          <li><span class="skill-name">query-optimization</span> Optimización con EXPLAIN</li>
+        </ul>
+      </div>
+
+      <div class="domain-card fade-in" style="border-color: rgba(201,169,110,0.25);">
+        <div class="domain-header">
+          <span class="domain-name">UX</span>
+          <span class="domain-count" style="color: var(--gold); border-color: rgba(201,169,110,0.3);">3 skills</span>
+        </div>
+        <ul class="domain-skills">
+          <li><span class="skill-name">accessibility-audit</span> WCAG 2.1 AA completo</li>
+          <li><span class="skill-name">usability-heuristics</span> 10 heurísticas de Nielsen</li>
+          <li><span class="skill-name">flow-review</span> Análisis de flujos de usuario</li>
+        </ul>
+      </div>
+
+      <div class="domain-card fade-in" style="border-color: rgba(201,169,110,0.25);">
+        <div class="domain-header">
+          <span class="domain-name">Rendimiento</span>
+          <span class="domain-count" style="color: var(--gold); border-color: rgba(201,169,110,0.3);">3 skills</span>
+        </div>
+        <ul class="domain-skills">
+          <li><span class="skill-name">profiling</span> CPU y memoria por runtime</li>
+          <li><span class="skill-name">benchmark</span> Benchmarks con p50, p95, p99</li>
+          <li><span class="skill-name">bundle-size</span> Análisis y reducción de bundles</li>
+        </ul>
+      </div>
+
+      <div class="domain-card fade-in" style="border-color: rgba(201,169,110,0.25);">
+        <div class="domain-header">
+          <span class="domain-name">GitHub</span>
+          <span class="domain-count" style="color: var(--gold); border-color: rgba(201,169,110,0.3);">4 skills</span>
+        </div>
+        <ul class="domain-skills">
+          <li><span class="skill-name">repo-setup</span> Configuración completa de repo</li>
+          <li><span class="skill-name">pr-workflow</span> PRs bien documentadas</li>
+          <li><span class="skill-name">release</span> Releases con versionado semántico</li>
+          <li><span class="skill-name">issue-templates</span> Plantillas de issues YAML</li>
+        </ul>
+      </div>
+
+      <div class="domain-card fade-in" style="border-color: rgba(201,169,110,0.25);">
+        <div class="domain-header">
+          <span class="domain-name">SEO</span>
+          <span class="domain-count" style="color: var(--gold); border-color: rgba(201,169,110,0.3);">3 skills</span>
+        </div>
+        <ul class="domain-skills">
+          <li><span class="skill-name">meta-tags</span> Title, description, Open Graph</li>
+          <li><span class="skill-name">structured-data</span> JSON-LD para schema.org</li>
+          <li><span class="skill-name">lighthouse-audit</span> Core Web Vitals y métricas</li>
+        </ul>
+      </div>
+
+      <div class="domain-card fade-in" style="border-color: rgba(201,169,110,0.25);">
+        <div class="domain-header">
+          <span class="domain-name">Marketing</span>
+          <span class="domain-count" style="color: var(--gold); border-color: rgba(201,169,110,0.3);">3 skills</span>
+        </div>
+        <ul class="domain-skills">
+          <li><span class="skill-name">copy-review</span> Revisión de textos públicos</li>
+          <li><span class="skill-name">cta-writing</span> CTAs efectivos sin teletienda</li>
+          <li><span class="skill-name">tone-guide</span> Guía de tono de marca</li>
         </ul>
       </div>
 
@@ -1197,7 +1681,7 @@ footer a {
     <div class="infra-grid">
 
       <div class="infra-card fade-in">
-        <h3>5 hooks</h3>
+        <h3>6 hooks</h3>
         <div class="infra-item">
           <span class="infra-item-name">session-start.sh</span>
           <span class="infra-item-tag">SessionStart</span>
@@ -1216,6 +1700,10 @@ footer a {
         </div>
         <div class="infra-item">
           <span class="infra-item-name">dependency-watch.py</span>
+          <span class="infra-item-tag">PostToolUse</span>
+        </div>
+        <div class="infra-item">
+          <span class="infra-item-name">spelling-guard.py</span>
           <span class="infra-item-tag">PostToolUse</span>
         </div>
       </div>
@@ -1269,11 +1757,11 @@ footer a {
         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
           <div class="infra-item">
             <span style="font-size:12px; color:var(--text-dim);">Líneas de código</span>
-            <span class="infra-item-name">1.426</span>
+            <span class="infra-item-name">2.872</span>
           </div>
           <div class="infra-item">
             <span style="font-size:12px; color:var(--text-dim);">Tests</span>
-            <span class="infra-item-name">23 passing</span>
+            <span class="infra-item-name">56 passing</span>
           </div>
         </div>
       </div>
@@ -1287,13 +1775,18 @@ footer a {
   <div class="container">
     <div class="section-header fade-in">
       <div class="section-label">Interfaz</div>
-      <h2 class="section-title">8 comandos</h2>
+      <h2 class="section-title">10 comandos</h2>
       <p class="section-desc">
         Todo se controla desde la línea de comandos de Claude Code.
         Un prefijo, un verbo, una descripción.
       </p>
     </div>
     <div class="flows-list">
+      <div class="flow-card fade-in">
+        <div><div class="flow-cmd">/alfred</div></div>
+        <div class="flow-desc">Asistente contextual: detecta el stack y la sesión activa, pregunta qué necesitas y lanza el flujo adecuado.</div>
+        <div></div>
+      </div>
       <div class="flow-card fade-in">
         <div><div class="flow-cmd">/alfred feature</div></div>
         <div class="flow-desc">Ciclo completo de 6 fases o desde la que indiques. Alfred pregunta y se adapta: "desde desarrollo", "solo documentación", "ciclo completo".</div>
@@ -1321,7 +1814,7 @@ footer a {
       </div>
       <div class="flow-card fade-in">
         <div><div class="flow-cmd">/alfred config</div></div>
-        <div class="flow-desc">Configurar autonomía, stack tecnológico, compliance y personalidad del equipo.</div>
+        <div class="flow-desc">Configurar autonomía, stack, compliance, personalidad y <strong style="color: var(--gold);">agentes opcionales</strong>. Incluye descubrimiento contextual: Alfred analiza tu proyecto y sugiere qué agentes activar.</div>
         <div></div>
       </div>
       <div class="flow-card fade-in">
@@ -1330,10 +1823,27 @@ footer a {
         <div></div>
       </div>
       <div class="flow-card fade-in">
+        <div><div class="flow-cmd">/alfred update</div></div>
+        <div class="flow-desc">Comprobar si hay versión nueva, ver las notas de release y actualizar con un clic.</div>
+        <div></div>
+      </div>
+      <div class="flow-card fade-in">
         <div><div class="flow-cmd">/alfred help</div></div>
         <div class="flow-desc">Ayuda completa de todos los comandos disponibles.</div>
         <div></div>
       </div>
+    </div>
+
+    <div class="fade-in" style="margin-top: 32px; background: var(--bg-card); border: 1px solid rgba(201,169,110,0.2); border-radius: 10px; padding: 24px 28px;">
+      <p style="font-size: 14px; color: var(--text-muted); line-height: 1.7;">
+        <strong style="color: var(--gold);">Agentes opcionales en los flujos:</strong>
+        los 6 agentes opcionales no tienen comandos propios. Se activan con
+        <strong style="color: var(--blue);">/alfred config</strong> y a partir de ahí se integran automáticamente
+        en los flujos existentes. Por ejemplo, si activas el <em>data-engineer</em>, participará en la fase de
+        arquitectura de <strong style="color: var(--blue);">/alfred feature</strong>; si activas el <em>seo-specialist</em>,
+        intervendrá en la fase de calidad de <strong style="color: var(--blue);">/alfred ship</strong>.
+        Alfred decide cuándo invocar a cada agente según el contexto del flujo.
+      </p>
     </div>
   </div>
 </section>
@@ -1398,11 +1908,11 @@ footer a {
 <section id="uso" style="padding: 100px 0;">
   <div class="container">
     <div class="section-header fade-in">
-      <div class="section-label" style="color: var(--cyan);">En la practica</div>
-      <h2 class="section-title">Como se usa</h2>
+      <div class="section-label" style="color: var(--cyan);">En la práctica</div>
+      <h2 class="section-title">Cómo se usa</h2>
       <p class="section-desc">
         Escenarios reales de uso paso a paso. Cada caso muestra el flujo completo
-        desde la invocacion hasta el resultado.
+        desde la invocación hasta el resultado.
       </p>
     </div>
     <div class="use-cases-grid">
@@ -1413,8 +1923,8 @@ footer a {
         <div class="use-case-title">Desarrollar una feature completa</div>
         <code class="use-case-cmd">/alfred feature sistema de notificaciones push</code>
         <ul class="use-case-steps">
-          <li>El product-owner genera el PRD con historias de usuario y criterios de aceptacion</li>
-          <li>El architect diseña la solucion y el security-officer valida el diseño</li>
+          <li>El product-owner genera el PRD con historias de usuario y criterios de aceptación</li>
+          <li>El architect diseña la solución y el security-officer valida el diseño</li>
           <li>El senior-dev implementa siguiendo TDD estricto (rojo-verde-refactor)</li>
           <li>QA y seguridad auditan en paralelo antes de dar el visto bueno</li>
           <li>El tech-writer documenta la API y el devops-engineer prepara el despliegue</li>
@@ -1423,38 +1933,38 @@ footer a {
 
       <!-- 2. Correccion de bug -->
       <div class="use-case-card fade-in">
-        <div class="use-case-label" style="color: var(--red); background: rgba(229,86,79,0.08);">Correccion</div>
+        <div class="use-case-label" style="color: var(--red); background: rgba(229,86,79,0.08);">Corrección</div>
         <div class="use-case-title">Corregir un bug</div>
         <code class="use-case-cmd">/alfred fix el login falla con emails que tienen tildes</code>
         <ul class="use-case-steps">
-          <li>El senior-dev reproduce el error e identifica la causa raiz</li>
+          <li>El senior-dev reproduce el error e identifica la causa raíz</li>
           <li>Escribe un test que falla reproduciendo el bug exacto</li>
-          <li>Implementa la correccion minima que hace pasar el test</li>
+          <li>Implementa la corrección mínima que hace pasar el test</li>
           <li>QA y seguridad validan que no se hayan introducido regresiones</li>
         </ul>
       </div>
 
       <!-- 3. Investigacion tecnica -->
       <div class="use-case-card fade-in">
-        <div class="use-case-label" style="color: var(--purple); background: rgba(160,126,232,0.08);">Investigacion</div>
-        <div class="use-case-title">Investigacion tecnica (spike)</div>
+        <div class="use-case-label" style="color: var(--purple); background: rgba(160,126,232,0.08);">Investigación</div>
+        <div class="use-case-title">Investigación técnica (spike)</div>
         <code class="use-case-cmd">/alfred spike evaluar si migrar de REST a gRPC</code>
         <ul class="use-case-steps">
-          <li>El architect y el senior-dev exploran las alternativas sin compromiso de codigo</li>
+          <li>El architect y el senior-dev exploran las alternativas sin compromiso de código</li>
           <li>Se generan pruebas de concepto ligeras para comparar rendimiento</li>
-          <li>Se documenta un ADR con los hallazgos, pros, contras y recomendacion</li>
-          <li>El usuario decide si proceder a implementacion o descartarlo</li>
+          <li>Se documenta un ADR con los hallazgos, pros, contras y recomendación</li>
+          <li>El usuario decide si proceder a implementación o descartarlo</li>
         </ul>
       </div>
 
       <!-- 4. Auditoria del proyecto -->
       <div class="use-case-card fade-in">
-        <div class="use-case-label" style="color: var(--orange); background: rgba(232,164,74,0.08);">Auditoria</div>
+        <div class="use-case-label" style="color: var(--orange); background: rgba(232,164,74,0.08);">Auditoría</div>
         <div class="use-case-title">Auditar el proyecto</div>
         <code class="use-case-cmd">/alfred audit</code>
         <ul class="use-case-steps">
-          <li>4 agentes trabajan en paralelo: QA, seguridad, arquitectura y documentacion</li>
-          <li>QA busca errores logicos, code smells y cobertura de tests</li>
+          <li>4 agentes trabajan en paralelo: QA, seguridad, arquitectura y documentación</li>
+          <li>QA busca errores lógicos, code smells y cobertura de tests</li>
           <li>Seguridad analiza OWASP Top 10, dependencias con CVEs y compliance RGPD/NIS2</li>
           <li>Se consolida un informe unico con hallazgos priorizados por severidad</li>
         </ul>
@@ -1466,7 +1976,7 @@ footer a {
         <div class="use-case-title">Preparar una entrega</div>
         <code class="use-case-cmd">/alfred ship</code>
         <ul class="use-case-steps">
-          <li>Auditoria final obligatoria: QA y seguridad deben aprobar</li>
+          <li>Auditoría final obligatoria: QA y seguridad deben aprobar</li>
           <li>El tech-writer actualiza el changelog y genera las notas de release</li>
           <li>El devops-engineer empaqueta, configura el pipeline y verifica el build</li>
           <li>Despliegue supervisado: el usuario confirma antes de subir a produccion</li>
@@ -1479,26 +1989,307 @@ footer a {
         <div class="use-case-title">Asistente contextual</div>
         <code class="use-case-cmd">/alfred</code>
         <ul class="use-case-steps">
-          <li>Alfred detecta el stack del proyecto y el estado de la sesion activa</li>
-          <li>Pregunta que necesitas y ofrece opciones adaptadas al contexto</li>
+          <li>Alfred detecta el stack del proyecto y el estado de la sesión activa</li>
+          <li>Pregunta qué necesitas y ofrece opciones adaptadas al contexto</li>
           <li>Interpreta tu respuesta en lenguaje natural y lanza el flujo adecuado</li>
-          <li>Tambien puedes decir "usa el plugin de Alfred" en cualquier momento</li>
+          <li>También puedes decir "usa el plugin de Alfred" en cualquier momento</li>
         </ul>
       </div>
 
-      <!-- 7. Proteccion automatica -->
-      <div class="use-case-card use-case-wide fade-in">
-        <div class="use-case-label" style="color: var(--cyan); background: rgba(78,201,201,0.08);">Automatico</div>
-        <div class="use-case-title">Proteccion en segundo plano</div>
-        <p style="font-size: 14px; color: var(--text-muted); margin: 10px 0 14px;">
-          Sin necesidad de ejecutar ningun comando, Alfred vigila automaticamente tu sesion de trabajo
-          mediante hooks que se activan en cada operacion relevante.
-        </p>
-        <ul class="use-case-steps" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 24px;">
-          <li><strong style="color: var(--text);">Guardia de secretos</strong> -- bloquea la escritura de API keys, tokens o contraseñas en el codigo</li>
-          <li><strong style="color: var(--text);">Quality gate</strong> -- verifica que los tests pasen despues de cada cambio significativo</li>
-          <li><strong style="color: var(--text);">Vigilancia de dependencias</strong> -- detecta nuevas librerias y notifica al auditor de seguridad</li>
+      <!-- 7. SonarQube -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--red); background: rgba(229,86,79,0.08);">Calidad</div>
+        <div class="use-case-title">Análisis con SonarQube</div>
+        <code class="use-case-cmd">/alfred audit</code>
+        <ul class="use-case-steps">
+          <li>El QA comprueba si Docker está instalado; si no, lo instala él mismo (con tu permiso)</li>
+          <li>Levanta SonarQube con Docker automáticamente y espera a que esté listo</li>
+          <li>Configura el proyecto, ejecuta el scanner y espera los resultados</li>
+          <li>Traduce los hallazgos (bugs, vulnerabilidades, code smells) en un informe con correcciones propuestas</li>
+          <li>Limpia el contenedor al terminar: no deja nada corriendo</li>
         </ul>
+      </div>
+
+      <!-- 8. Base de datos -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--orange); background: rgba(232,164,74,0.08);">Datos</div>
+        <div class="use-case-title">Diseñar y migrar una base de datos</div>
+        <code class="use-case-cmd">/alfred feature añadir sistema de suscripciones con pagos</code>
+        <ul class="use-case-steps">
+          <li>El data-engineer diseña el esquema normalizado con constraints e índices</li>
+          <li>Genera el script de migración con rollback obligatorio (ida y vuelta)</li>
+          <li>El architect valida la integración con el ORM y el resto del stack</li>
+          <li>Se ejecuta la migración, se verifican las tablas y se pasan los tests de integración</li>
+        </ul>
+      </div>
+
+      <!-- 9. GitHub -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--text-muted); background: rgba(110,115,138,0.08);">GitHub</div>
+        <div class="use-case-title">Configurar y publicar un repositorio</div>
+        <code class="use-case-cmd">/alfred ship</code>
+        <ul class="use-case-steps">
+          <li>El github-manager verifica que gh CLI está instalado y autenticado; si no, guía el proceso</li>
+          <li>Configura branch protection, labels, issue templates y .gitignore optimizado</li>
+          <li>Crea la PR con descripción estructurada, labels y asignación de reviewers</li>
+          <li>Genera la release con versionado semántico, changelog categorizado y artefactos adjuntos</li>
+        </ul>
+      </div>
+
+      <!-- 10. SEO y copy -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--green); background: rgba(78,201,144,0.08);">SEO + Copy</div>
+        <div class="use-case-title">Optimizar una landing page</div>
+        <code class="use-case-cmd">/alfred audit</code>
+        <ul class="use-case-steps">
+          <li>El seo-specialist audita meta tags, Open Graph, canonical y datos estructurados JSON-LD</li>
+          <li>Ejecuta Lighthouse y prioriza las mejoras por impacto en Core Web Vitals</li>
+          <li>El copywriter revisa los textos: ortografía (tildes primero), claridad, tono y CTAs</li>
+          <li>Se genera un informe conjunto con correcciones listas para aplicar</li>
+        </ul>
+      </div>
+
+      <!-- 11. Accesibilidad y UX -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: #ff69b4; background: rgba(255,105,180,0.08);">UX</div>
+        <div class="use-case-title">Auditoría de accesibilidad y usabilidad</div>
+        <code class="use-case-cmd">/alfred audit</code>
+        <ul class="use-case-steps">
+          <li>El ux-reviewer ejecuta una auditoría WCAG 2.1 AA por los 4 principios (perceptible, operable, comprensible, robusto)</li>
+          <li>Aplica las 10 heurísticas de Nielsen al flujo principal del usuario</li>
+          <li>Identifica puntos de fricción, edge cases y pasos innecesarios en cada flujo</li>
+          <li>Genera un informe con severidad (0-4) y propuesta de mejora para cada hallazgo</li>
+        </ul>
+      </div>
+
+      <!-- 12. Rendimiento -->
+      <div class="use-case-card fade-in">
+        <div class="use-case-label" style="color: var(--purple); background: rgba(160,126,232,0.08);">Rendimiento</div>
+        <div class="use-case-title">Optimizar el rendimiento</div>
+        <code class="use-case-cmd">/alfred spike la API tarda 3 segundos en responder</code>
+        <ul class="use-case-steps">
+          <li>El performance-engineer ejecuta profiling de CPU y memoria para localizar cuellos de botella</li>
+          <li>Analiza queries lentas con EXPLAIN y propone índices o reestructuración</li>
+          <li>Ejecuta benchmarks antes y después con métricas reales (p50, p95, p99)</li>
+          <li>Si hay frontend, analiza el bundle size y propone tree-shaking o code splitting</li>
+        </ul>
+      </div>
+
+      <!-- 13. Proteccion automatica -->
+      <div class="use-case-card use-case-wide fade-in">
+        <div class="use-case-label" style="color: var(--cyan); background: rgba(78,201,201,0.08);">Automático</div>
+        <div class="use-case-title">Protección en segundo plano</div>
+        <p style="font-size: 14px; color: var(--text-muted); margin: 10px 0 14px;">
+          Sin necesidad de ejecutar ningún comando, Alfred vigila automáticamente tu sesión de trabajo
+          mediante hooks que se activan en cada operación relevante.
+        </p>
+        <ul class="use-case-steps" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 24px;">
+          <li><strong style="color: var(--text);">Guardia de secretos</strong> -- bloquea la escritura de API keys, tokens o contraseñas en el código</li>
+          <li><strong style="color: var(--text);">Quality gate</strong> -- verifica que los tests pasen después de cada cambio significativo</li>
+          <li><strong style="color: var(--text);">Vigilancia de dependencias</strong> -- detecta nuevas librerías y notifica al auditor de seguridad</li>
+          <li><strong style="color: var(--text);">Guardia ortográfico</strong> -- detecta palabras castellanas sin tilde al escribir o editar ficheros</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── Instalacion ────────────────────────────── -->
+<section id="instalar" style="background: var(--bg-surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label" style="color: var(--green);">Primeros pasos</div>
+      <h2 class="section-title">Instalación</h2>
+      <p class="section-desc">
+        Un comando en la terminal y listo. Compatible con macOS, Linux y Windows.
+        El instalador es idempotente: ejecutarlo de nuevo actualiza sin conflictos.
+      </p>
+    </div>
+
+    <div class="fade-in">
+      <div class="install-tabs">
+        <button class="install-tab active" data-tab="macos">macOS</button>
+        <button class="install-tab" data-tab="linux">Linux</button>
+        <button class="install-tab" data-tab="windows">Windows</button>
+      </div>
+
+      <div class="install-panel active" data-tab="macos">
+        <code class="install-cmd">curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash</code>
+        <div class="install-reqs">
+          <strong>Requisitos:</strong> git, python3, Claude Code instalado.<br>
+          Tras la instalación, reinicia Claude Code y ejecuta <strong>/alfred help</strong>.
+        </div>
+      </div>
+
+      <div class="install-panel" data-tab="linux">
+        <code class="install-cmd">curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash</code>
+        <div class="install-reqs">
+          <strong>Requisitos:</strong> git, python3, Claude Code instalado.<br>
+          Tras la instalación, reinicia Claude Code y ejecuta <strong>/alfred help</strong>.
+        </div>
+      </div>
+
+      <div class="install-panel" data-tab="windows">
+        <code class="install-cmd">irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex</code>
+        <div class="install-reqs">
+          <strong>Requisitos:</strong> git, PowerShell 5.1+ (preinstalado en Windows 10/11), Claude Code instalado.<br>
+          No necesita python3. Tras la instalación, reinicia Claude Code y ejecuta <strong>/alfred help</strong>.<br>
+          Alternativa: también puedes usar el instalador bash con WSL o Git Bash.
+        </div>
+      </div>
+    </div>
+
+    <!-- Desinstalacion -->
+    <div class="fade-in" style="margin-top: 48px;">
+      <h3 style="font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text-bright); margin-bottom: 8px;">Desinstalación</h3>
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+        Para eliminar Alfred Dev completamente, ejecuta el desinstalador de tu plataforma.
+        Limpia todos los registros y directorios del plugin.
+      </p>
+      <div class="uninstall-grid">
+        <div class="uninstall-card">
+          <h4>macOS / Linux</h4>
+          <code>curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/uninstall.sh | bash</code>
+        </div>
+        <div class="uninstall-card">
+          <h4>Windows (PowerShell)</h4>
+          <code>irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/uninstall.ps1 | iex</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actualizacion -->
+    <div class="fade-in" style="margin-top: 48px;">
+      <h3 style="font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text-bright); margin-bottom: 8px;">Actualización</h3>
+      <p style="font-size: 14px; color: var(--text-muted);">
+        Desde Claude Code, ejecuta <strong style="color: var(--blue);">/alfred update</strong> para comprobar
+        si hay una versión nueva. Si la hay, Alfred te muestra las notas de la release y te pregunta si quieres
+        actualizar. También puedes volver a ejecutar el instalador: es idempotente.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FAQ ────────────────────────────────────── -->
+<section id="faq">
+  <div class="container">
+    <div class="section-header fade-in" style="text-align: center;">
+      <div class="section-label">Preguntas frecuentes</div>
+      <h2 class="section-title">FAQ</h2>
+    </div>
+    <div class="faq-list">
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span class="faq-question-text">Funciona en Windows?</span>
+        </button>
+        <div class="faq-answer">
+          Sí. Alfred Dev tiene un instalador nativo en PowerShell para Windows 10/11.
+          También puedes usar el instalador bash a través de WSL (Windows Subsystem for Linux) o Git Bash.
+          La única dependencia en Windows es git; no necesita python3.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <span class="faq-question-text">Qué dependencias necesita?</span>
+        </button>
+        <div class="faq-answer">
+          En macOS y Linux: <strong>git</strong> y <strong>python3</strong>. Ambas suelen estar preinstaladas o son
+          fáciles de instalar con el gestor de paquetes del sistema.<br><br>
+          En Windows: solo <strong>git</strong>. PowerShell maneja el JSON de forma nativa, así que python3 no es necesario.
+          PowerShell 5.1+ viene preinstalado en Windows 10/11.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <span class="faq-question-text">Cómo actualizo el plugin?</span>
+        </button>
+        <div class="faq-answer">
+          Ejecuta <strong>/alfred update</strong> dentro de Claude Code. El comando consulta GitHub,
+          compara versiones y te muestra las notas de la release si hay versión nueva.
+          También puedes volver a ejecutar el instalador: sobreescribe la versión anterior sin conflictos.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19.439 5.56a5.018 5.018 0 0 0-7.09 0L11 6.91l-1.35-1.35a5.013 5.013 0 0 0-7.09 7.09L11 21.09l8.44-8.44a5.013 5.013 0 0 0 0-7.09z"/></svg>
+          <span class="faq-question-text">Es compatible con otros plugins de Claude Code?</span>
+        </button>
+        <div class="faq-answer">
+          Sí. Alfred Dev convive sin conflictos con otros plugins instalados. Usa su propio namespace
+          (<code style="font-family: var(--font-mono); font-size: 12px; color: var(--blue);">alfred-dev</code>)
+          y no interfiere con la configuración de otros plugins.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"/></svg>
+          <span class="faq-question-text">Qué son los agentes opcionales?</span>
+        </button>
+        <div class="faq-answer">
+          Son 6 agentes especializados que puedes activar según las necesidades de tu proyecto:
+          <strong>data-engineer</strong> (bases de datos), <strong>ux-reviewer</strong> (accesibilidad y usabilidad),
+          <strong>performance-engineer</strong> (rendimiento), <strong>github-manager</strong> (gestión de repositorios),
+          <strong>seo-specialist</strong> (posicionamiento web) y <strong>copywriter</strong> (textos y ortografía).<br><br>
+          Alfred analiza tu proyecto y te sugiere cuáles activar. También puedes gestionarlos manualmente
+          con <strong>/alfred config</strong>. Se activan o desactivan sin reinstalar nada.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span class="faq-question-text">Cuántos skills tiene en total?</span>
+        </button>
+        <div class="faq-answer">
+          56 skills distribuidos en 13 dominios. Los 7 dominios originales (producto, arquitectura, desarrollo,
+          seguridad, calidad, DevOps, documentación) cubren el ciclo de vida estándar. Los 6 nuevos
+          (datos, UX, rendimiento, GitHub, SEO, marketing) corresponden a los agentes opcionales. Los dominios
+          existentes también se han ampliado: documentación pasó de 4 a 9 skills, seguridad de 5 a 6, y calidad de 4 a 6.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span class="faq-question-text">Cuánto cuesta?</span>
+        </button>
+        <div class="faq-answer">
+          Nada. Alfred Dev es software libre bajo licencia MIT. Puedes usarlo, modificarlo
+          y distribuirlo sin restricciones. El código fuente está en
+          <a href="https://github.com/686f6c61/Claude-JARVIS-dev">GitHub</a>.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="faq-question-text">En qué idioma responde Alfred?</span>
+        </button>
+        <div class="faq-answer">
+          Castellano de España por defecto: tanto las respuestas como los comentarios de código,
+          commits y documentación generada. Puedes ajustar este comportamiento con
+          <strong>/alfred config</strong>.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="faq-question-text">Qué versiones de Claude Code soporta?</span>
+        </button>
+        <div class="faq-answer">
+          Cualquier versión de Claude Code que soporte el sistema de plugins. Si puedes instalar plugins
+          desde la línea de comandos, Alfred Dev funcionará. No hay requisito de versión mínima específica.
+        </div>
       </div>
 
     </div>
@@ -1509,7 +2300,7 @@ footer a {
 <footer>
   <div class="container">
     <p>
-      <strong style="color: var(--text);">Alfred Dev</strong> v0.1.2
+      <strong style="color: var(--text);">Alfred Dev</strong> v0.1.4
       <span style="margin: 0 8px; color: var(--border-light);">|</span>
       MIT License
       <span style="margin: 0 8px; color: var(--border-light);">|</span>
@@ -1517,7 +2308,7 @@ footer a {
     </p>
     <p style="margin-top: 8px;">
       Plugin de <a href="https://claude.ai/claude-code">Claude Code</a>.
-      8 agentes. 29 skills. Quality gates infranqueables.
+      14 agentes. 56 skills. 10 comandos. De la idea a producción.
     </p>
     <p style="margin-top: 24px; font-size: 12px; color: var(--text-dim);">
       Ingeniería de software automatizada para Claude Code.
@@ -1539,6 +2330,51 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+/* ── Copiar al portapapeles ── */
+function copyCmd(el) {
+  const cmd = el.dataset.cmd;
+  const hint = el.querySelector('.copy-hint');
+  navigator.clipboard.writeText(cmd).then(() => {
+    hint.textContent = 'copiado';
+    el.classList.add('copied');
+    setTimeout(() => {
+      hint.textContent = 'clic para copiar';
+      el.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+/* ── Tabs de instalacion ── */
+document.querySelectorAll('.install-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    document.querySelectorAll('.install-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.install-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelector(`.install-panel[data-tab="${target}"]`).classList.add('active');
+  });
+});
+
+/* ── Copiar bloques de codigo de instalacion/desinstalacion ── */
+document.querySelectorAll('.install-cmd, .uninstall-card code').forEach(el => {
+  el.title = 'Clic para copiar';
+  el.addEventListener('click', () => {
+    const text = el.textContent.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      const original = el.textContent;
+      el.textContent = 'Copiado al portapapeles';
+      setTimeout(() => { el.textContent = original; }, 1500);
+    });
+  });
+});
+
+/* ── FAQ acordeon ── */
+document.querySelectorAll('.faq-question').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.parentElement.classList.toggle('open');
+  });
+});
 </script>
 
 </body>
