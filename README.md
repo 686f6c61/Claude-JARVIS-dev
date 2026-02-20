@@ -28,30 +28,44 @@ Reinicia Claude Code después de instalar y verifica con:
 /alfred help
 ```
 
+En Windows (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex
+```
+
 Requisitos:
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) instalado y configurado.
-- Python 3.10+ (para los hooks y el core).
+- Python 3.10+ (para los hooks y el core; no necesario en Windows).
 - git (para la descarga del plugin).
 
 Para desinstalar:
 
 ```bash
+# macOS / Linux
 curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/uninstall.sh | bash
+```
+
+```powershell
+# Windows
+irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/uninstall.ps1 | iex
 ```
 
 ## Comandos
 
 Toda la interfaz se controla desde la línea de comandos de Claude Code con el prefijo `/alfred`:
 
-| Comando | Descripción |
+| Comando | Descripcion |
 |---------|-------------|
-| `/alfred feature <desc>` | Ciclo completo de 6 fases o parcial. Alfred pregunta desde qué fase arrancar. |
-| `/alfred fix <desc>` | Corrección de bugs con flujo de 3 fases: diagnóstico, corrección TDD, validación. |
-| `/alfred spike <tema>` | Investigación técnica sin compromiso: prototipos, benchmarks, documento de hallazgos. |
-| `/alfred ship` | Release: auditoría final paralela, changelog, versionado semántico, despliegue. |
-| `/alfred audit` | Auditoría completa con 4 agentes en paralelo: calidad, seguridad, arquitectura, documentación. |
-| `/alfred config` | Configurar autonomía, stack, compliance y personalidad del equipo. |
-| `/alfred status` | Fase actual, fases completadas con duración, gate pendiente y agente activo. |
+| `/alfred` | Asistente contextual: detecta el stack y la sesion activa, pregunta que necesitas. |
+| `/alfred feature <desc>` | Ciclo completo de 6 fases o parcial. Alfred pregunta desde que fase arrancar. |
+| `/alfred fix <desc>` | Correccion de bugs con flujo de 3 fases: diagnostico, correccion TDD, validacion. |
+| `/alfred spike <tema>` | Investigacion tecnica sin compromiso: prototipos, benchmarks, documento de hallazgos. |
+| `/alfred ship` | Release: auditoria final paralela, changelog, versionado semantico, despliegue. |
+| `/alfred audit` | Auditoria completa con 4 agentes en paralelo: calidad, seguridad, arquitectura, documentacion. |
+| `/alfred config` | Configurar autonomia, stack, compliance, personalidad, agentes opcionales y memoria persistente. |
+| `/alfred status` | Fase actual, fases completadas con duracion, gate pendiente y agente activo. |
+| `/alfred update` | Comprobar si hay version nueva y actualizar el plugin. |
 | `/alfred help` | Referencia completa de comandos, agentes y flujos. |
 
 ### Ejemplo de uso
@@ -118,7 +132,7 @@ skills/
   documentación/     -- api-docs, architecture-docs, user-guide, changelog
 ```
 
-### Hooks (6)
+### Hooks (7)
 
 Los hooks interceptan eventos del ciclo de vida de Claude Code para aplicar validaciones automaticas:
 
@@ -129,6 +143,7 @@ Los hooks interceptan eventos del ciclo de vida de Claude Code para aplicar vali
 | `secret-guard.sh` | `PreToolUse` (Write/Edit) | Bloquea escritura de secretos (API keys, tokens, passwords) |
 | `quality-gate.py` | `PostToolUse` (Bash) | Verifica que los tests pasen despues de ejecuciones de Bash |
 | `dependency-watch.py` | `PostToolUse` (Write/Edit) | Detecta dependencias nuevas y notifica al security officer |
+| `spelling-guard.py` | `PostToolUse` (Write/Edit) | Detecta palabras castellanas sin tilde al escribir o editar ficheros |
 | `memory-capture.py` | `PostToolUse` (Write/Edit) | Captura automatica de eventos en la memoria persistente del proyecto |
 
 ### Templates (7)
@@ -228,7 +243,7 @@ alfred-dev/
   agents/optional/        # 7 agentes opcionales
   commands/               # 10 comandos /alfred
   skills/                 # 56 skills en 13 dominios
-  hooks/                  # 6 hooks del ciclo de vida
+  hooks/                  # 7 hooks del ciclo de vida
     hooks.json            # Configuracion de eventos
   core/                   # Motor de orquestacion y memoria (Python)
   mcp/                    # Servidor MCP stdio (memoria persistente)
@@ -237,19 +252,40 @@ alfred-dev/
   site/                   # Landing page para GitHub Pages
 ```
 
-## Configuración
+## Configuracion
 
-El plugin se puede configurar por proyecto creando el fichero `.claude/alfred-dev.local.md` en la raíz del proyecto:
+El plugin se configura por proyecto con el fichero `.claude/alfred-dev.local.md` en la raiz del proyecto. Se gestiona con `/alfred config`, que incluye descubrimiento contextual de agentes opcionales y activacion de memoria persistente:
 
 ```yaml
 ---
-autonomy: medium          # low | medium | high
-compliance:
-  - rgpd
-  - nis2
-  - cra
-stack: auto               # auto | node | python | rust | go | ...
-personality: formal       # formal | casual | minimal
+autonomia:
+  producto: interactivo
+  arquitectura: interactivo
+  desarrollo: semi-autonomo
+  seguridad: autonomo
+  calidad: semi-autonomo
+  documentacion: autonomo
+  devops: semi-autonomo
+
+agentes_opcionales:
+  data-engineer: true
+  ux-reviewer: false
+  performance-engineer: false
+  github-manager: true
+  seo-specialist: false
+  copywriter: false
+  librarian: true
+
+memoria:
+  enabled: true
+  capture_decisions: true
+  capture_commits: true
+  retention_days: 365
+
+personalidad:
+  nivel_sarcasmo: 3
+  celebrar_victorias: true
+  insultar_malas_practicas: true
 ---
 
 Notas adicionales del proyecto que Alfred debe tener en cuenta.
