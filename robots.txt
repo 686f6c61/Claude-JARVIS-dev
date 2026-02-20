@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://686f6c61.github.io/Claude-JARVIS-dev/sitemap.xml

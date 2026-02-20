@@ -3,8 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alfred Dev - Tus compañeros de desarrollo en un plugin</title>
-<meta name="description" content="Plugin de Claude Code con 14 agentes especializados (8 de núcleo + 6 opcionales) y 56 skills que te acompañan en todo el ciclo de desarrollo: producto, arquitectura, desarrollo TDD, calidad, seguridad, documentación, despliegue, datos, UX, rendimiento, GitHub, SEO y copywriting.">
+<title>Alfred Dev - Plugin de Claude Code con 15 agentes de ingeniería</title>
+<meta name="description" content="Plugin de Claude Code: 15 agentes especializados, 56 skills, memoria persistente y quality gates. De la idea a producción con TDD, seguridad y compliance.">
+<link rel="canonical" href="https://686f6c61.github.io/Claude-JARVIS-dev/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Alfred Dev - Plugin de Claude Code con 15 agentes de ingeniería">
+<meta property="og:description" content="15 agentes especializados, 56 skills, memoria persistente y quality gates. Ingeniería de software automatizada para Claude Code.">
+<meta property="og:url" content="https://686f6c61.github.io/Claude-JARVIS-dev/">
+<meta property="og:site_name" content="Alfred Dev">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Alfred Dev - Plugin de Claude Code con 15 agentes de ingeniería">
+<meta name="twitter:description" content="15 agentes especializados, 56 skills, memoria persistente y quality gates. De la idea a producción.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>A</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Libre+Baskerville:ital,wght@0,400;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -26,8 +37,8 @@
   --gold-dim: #8a7348;
   --text: #d8dae3;
   --text-bright: #eef0f7;
-  --text-muted: #6e738a;
-  --text-dim: #4a4e63;
+  --text-muted: #8b90a8;
+  --text-dim: #6b7090;
   --red: #e5564f;
   --green: #4ec990;
   --orange: #e8a44a;
@@ -85,19 +96,23 @@ nav .container {
   font-weight: 700;
   color: var(--text-bright);
   letter-spacing: 0.02em;
+  z-index: 102;
 }
 
 .nav-brand span { color: var(--blue); }
 
 .nav-links {
   display: flex;
-  gap: 28px;
+  gap: 20px;
   list-style: none;
 }
 
 .nav-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -105,6 +120,16 @@ nav .container {
 }
 
 .nav-links a:hover { color: var(--text-bright); }
+
+.nav-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.nav-links a:hover .nav-icon { opacity: 1; }
 
 .nav-version {
   font-family: var(--font-mono);
@@ -114,6 +139,40 @@ nav .container {
   border: 1px solid var(--border);
   padding: 3px 10px;
   border-radius: 4px;
+  z-index: 102;
+}
+
+/* ── Hamburger ───────────────────────────────────── */
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px;
+  min-width: 44px;
+  min-height: 44px;
+  z-index: 102;
+}
+
+.nav-hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-muted);
+  border-radius: 1px;
+  transition: all 0.3s;
+}
+
+.nav-hamburger span + span { margin-top: 5px; }
+
+.nav-hamburger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(3.5px, 3.5px);
+}
+
+.nav-hamburger.open span:nth-child(2) { opacity: 0; }
+
+.nav-hamburger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(3.5px, -3.5px);
 }
 
 /* ── Hero ─────────────────────────────────────────── */
@@ -996,9 +1055,62 @@ footer a {
   transform: translateY(0);
 }
 
+/* ── Memory y proteccion grids ───────────────────── */
+.memory-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.protection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 24px;
+}
+
 /* ── Responsive ──────────────────────────────────── */
+@media (max-width: 900px) {
+  .nav-links { gap: 12px; }
+  .nav-links a { font-size: 11px; }
+  .nav-icon { width: 12px; height: 12px; }
+}
+
 @media (max-width: 768px) {
-  .nav-links { display: none; }
+  .nav-hamburger { display: block; }
+
+  .nav-links {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(7, 8, 12, 0.97);
+    backdrop-filter: blur(24px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 80px 32px 40px;
+    z-index: 101;
+  }
+
+  .nav-links.open { display: flex; }
+
+  .nav-links li {
+    width: 100%;
+    max-width: 300px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-links li:last-child { border-bottom: none; }
+
+  .nav-links a {
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    padding: 16px 0;
+    width: 100%;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .nav-icon { width: 18px; height: 18px; opacity: 0.8; }
+
   .flow-card {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -1009,56 +1121,140 @@ footer a {
   .infra-grid { grid-template-columns: 1fr; }
   .gates-grid { grid-template-columns: 1fr; }
   .use-cases-grid { grid-template-columns: 1fr; }
+  .uninstall-grid { grid-template-columns: 1fr; }
+  .protection-grid { grid-template-columns: 1fr; }
+  .memory-grid { grid-template-columns: 1fr; }
+  .config-grid { grid-template-columns: 1fr !important; }
+
+  .hero { padding: 120px 0 60px; }
+  .hero-subtitle { font-size: 16px; }
+  .hero-cta { font-size: 11px; padding: 10px 16px; }
+  .hero-cta-label { font-size: 10px; }
+
+  section { padding: 60px 0; }
+  .section-title { font-size: 28px; }
+
+  .stats-grid { gap: 16px; }
+
+  .install-tabs { flex-wrap: wrap; }
+}
+
+/* ── Accesibilidad ────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 200;
+  background: var(--blue);
+  color: var(--bg-deep);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .fade-in {
+    opacity: 1;
+    transform: none;
+  }
+  html { scroll-behavior: auto; }
 }
 
 @media (max-width: 480px) {
-  .hero h1 { font-size: 36px; }
-  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .hero h1 { font-size: 32px; }
+  .hero-cta { flex-wrap: wrap; gap: 6px; }
+  .hero-cta-text { font-size: 10px; word-break: break-all; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat-number { font-size: 28px; }
+  .container { padding: 0 16px; }
 }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Alfred Dev",
+  "description": "Plugin de Claude Code con 15 agentes especializados de ingeniería de software, 56 skills, memoria persistente y quality gates.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS, Linux, Windows",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "license": "https://opensource.org/licenses/MIT",
+  "url": "https://686f6c61.github.io/Claude-JARVIS-dev/",
+  "softwareVersion": "0.2.0"
+}
+</script>
 </head>
 <body>
+
+<a href="#contenido" class="skip-link">Saltar al contenido</a>
 
 <!-- ─── Navegacion ─────────────────────────────── -->
 <nav>
   <div class="container">
-    <div class="nav-brand">Alfred <span>Dev</span></div>
-    <ul class="nav-links">
-      <li><a href="#agentes">Agentes</a></li>
-      <li><a href="#flujos">Flujos</a></li>
-      <li><a href="#skills">Skills</a></li>
-      <li><a href="#gates">Gates</a></li>
-      <li><a href="#infra">Infra</a></li>
-      <li><a href="#uso">Uso</a></li>
-      <li><a href="#instalar">Instalar</a></li>
-      <li><a href="#faq">FAQ</a></li>
+    <a href="#" class="nav-brand" style="text-decoration: none;">Alfred <span>Dev</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#agentes"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Agentes</a></li>
+      <li><a href="#flujos"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>Flujos</a></li>
+      <li><a href="#skills"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Skills</a></li>
+      <li><a href="#gates"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Gates</a></li>
+      <li><a href="#infra"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Infra</a></li>
+      <li><a href="#uso"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>Uso</a></li>
+      <li><a href="#memoria"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Memoria</a></li>
+      <li><a href="#instalar"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Instalar</a></li>
+      <li><a href="#faq"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>FAQ</a></li>
     </ul>
-    <span class="nav-version">v0.2.0</span>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Menú de navegación" aria-expanded="false" aria-controls="navLinks">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <a href="https://github.com/686f6c61/Claude-JARVIS-dev/releases" class="nav-version" title="Ver historial de versiones" style="text-decoration: none;">v0.2.0</a>
   </div>
 </nav>
 
 <!-- ─── Hero ───────────────────────────────────── -->
-<header class="hero">
+<header class="hero" id="contenido">
   <div class="container">
-    <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 32px;">
-      <div class="hero-badge" style="margin-bottom: 0;">Plugin de Claude Code</div>
-      <div class="hero-badge-alt">Plugin OpenCode <span style="font-size: 10px; opacity: 0.7;">(en desarrollo)</span></div>
-    </div>
     <h1>Tus compañeros de<br>desarrollo en un <em>plugin</em></h1>
-    <p class="hero-subtitle">
-      14 agentes especializados con personalidad propia. 8 de núcleo, 6 opcionales que
-      activas según tu proyecto. Quality gates, 56 skills, de la idea a producción.
+    <p style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 17px; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.01em;">
+      para <span style="color: var(--blue);">Claude Code</span> y <span style="color: var(--gold);">OpenCode</span> <span style="font-size: 13px; opacity: 0.7;">(en desarrollo)</span>
     </p>
-    <div class="hero-cta" onclick="copyCmd(this)" data-cmd="curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash">
+    <p class="hero-subtitle">
+      15 agentes especializados con personalidad propia. 8 de núcleo, 7 opcionales que
+      activas según tu proyecto. Memoria persistente, quality gates, 56 skills, de la idea a producción.
+    </p>
+    <button type="button" class="hero-cta" onclick="copyCmd(this)" data-cmd="curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash" aria-label="Copiar comando de instalación para macOS y Linux">
       <span class="hero-cta-label">macOS / Linux</span>
       <span class="hero-cta-text">curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash</span>
       <span class="copy-hint">clic para copiar</span>
-    </div>
-    <div class="hero-cta" style="margin-top: 10px;" onclick="copyCmd(this)" data-cmd="irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex">
+    </button>
+    <button type="button" class="hero-cta" style="margin-top: 10px;" onclick="copyCmd(this)" data-cmd="irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex" aria-label="Copiar comando de instalación para Windows">
       <span class="hero-cta-label">Windows</span>
       <span class="hero-cta-text">irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex</span>
       <span class="copy-hint">clic para copiar</span>
-    </div>
+    </button>
   </div>
 </header>
 
@@ -1067,7 +1263,7 @@ footer a {
   <div class="container">
     <div class="stats-grid">
       <div class="fade-in">
-        <div class="stat-number">14</div>
+        <div class="stat-number">15</div>
         <div class="stat-label">Agentes</div>
       </div>
       <div class="fade-in">
@@ -1087,11 +1283,11 @@ footer a {
         <div class="stat-label">Templates</div>
       </div>
       <div class="fade-in">
-        <div class="stat-number">6</div>
+        <div class="stat-number">7</div>
         <div class="stat-label">Hooks</div>
       </div>
       <div class="fade-in">
-        <div class="stat-number">8</div>
+        <div class="stat-number">18</div>
         <div class="stat-label">Gates</div>
       </div>
     </div>
@@ -1197,10 +1393,10 @@ footer a {
     <!-- Agentes opcionales -->
     <div class="section-header fade-in" style="margin-top: 64px;">
       <div class="section-label" style="color: var(--gold);">Ampliables</div>
-      <h2 class="section-title">6 agentes opcionales</h2>
+      <h2 class="section-title">7 agentes opcionales</h2>
       <p class="section-desc">
-        Roles especializados que activas según lo que necesite tu proyecto. Alfred analiza
-        tu stack y te sugiere cuáles activar. Se gestionan con <strong style="color: var(--blue);">/alfred config</strong>.
+        Roles especializados que activas segun lo que necesite tu proyecto. Alfred analiza
+        tu stack y te sugiere cuales activar. Se gestionan con <strong style="color: var(--blue);">/alfred config</strong>.
       </p>
     </div>
     <div class="agents-grid">
@@ -1261,8 +1457,18 @@ footer a {
           <span class="agent-model">sonnet</span>
         </div>
         <div class="agent-alias">Copywriter</div>
-        <div class="agent-role">Revisión de textos, CTAs efectivos, guía de tono. Ortografía impecable como prioridad absoluta. Sin teletienda.</div>
+        <div class="agent-role">Revision de textos, CTAs efectivos, guia de tono. Ortografia impecable como prioridad absoluta. Sin teletienda.</div>
         <div class="agent-phrase">"Si escribes 'aplicacion' sin tilde, no publiques."</div>
+      </div>
+
+      <div class="agent-card fade-in" style="--agent-color: #c9a96e">
+        <div class="agent-header">
+          <span class="agent-name">El Bibliotecario</span>
+          <span class="agent-model">sonnet</span>
+        </div>
+        <div class="agent-alias">Memoria del proyecto</div>
+        <div class="agent-role">Responde consultas historicas sobre decisiones, commits e iteraciones del proyecto. Siempre cita las fuentes con IDs verificables: [D#id], [C#sha], [I#id].</div>
+        <div class="agent-phrase">"Segun la decision D#42 del 15 de febrero, se descarto Redis por latencia."</div>
       </div>
 
     </div>
@@ -1511,7 +1717,7 @@ footer a {
           <li><span class="skill-name">write-adr</span> Architecture Decision Records</li>
           <li><span class="skill-name">choose-stack</span> Matriz de decisión de stack</li>
           <li><span class="skill-name">design-system</span> Diseño con diagramas Mermaid</li>
-          <li><span class="skill-name">evaluate-deps</span> Auditoría de dependencias</li>
+          <li><span class="skill-name">evaluate-dependencies</span> Auditoría de dependencias</li>
         </ul>
       </div>
 
@@ -1524,7 +1730,7 @@ footer a {
           <li><span class="skill-name">tdd-cycle</span> Ciclo rojo-verde-refactor</li>
           <li><span class="skill-name">explore-codebase</span> Exploración de código</li>
           <li><span class="skill-name">refactor</span> Refactoring guiado</li>
-          <li><span class="skill-name">review-response</span> Respuesta a code reviews</li>
+          <li><span class="skill-name">code-review-response</span> Respuesta a code reviews</li>
         </ul>
       </div>
 
@@ -1681,7 +1887,7 @@ footer a {
     <div class="infra-grid">
 
       <div class="infra-card fade-in">
-        <h3>6 hooks</h3>
+        <h3>7 hooks</h3>
         <div class="infra-item">
           <span class="infra-item-name">session-start.sh</span>
           <span class="infra-item-tag">SessionStart</span>
@@ -1704,6 +1910,10 @@ footer a {
         </div>
         <div class="infra-item">
           <span class="infra-item-name">spelling-guard.py</span>
+          <span class="infra-item-tag">PostToolUse</span>
+        </div>
+        <div class="infra-item">
+          <span class="infra-item-name">memory-capture.py</span>
           <span class="infra-item-tag">PostToolUse</span>
         </div>
       </div>
@@ -1741,7 +1951,7 @@ footer a {
       </div>
 
       <div class="infra-card fade-in">
-        <h3>3 módulos core</h3>
+        <h3>4 modulos core</h3>
         <div class="infra-item">
           <span class="infra-item-name">orchestrator.py</span>
           <span class="infra-item-desc">Flujos, sesiones, gates</span>
@@ -1752,16 +1962,16 @@ footer a {
         </div>
         <div class="infra-item">
           <span class="infra-item-name">config_loader.py</span>
-          <span class="infra-item-desc">Config y detección de stack</span>
+          <span class="infra-item-desc">Config y deteccion de stack</span>
+        </div>
+        <div class="infra-item">
+          <span class="infra-item-name">memory.py</span>
+          <span class="infra-item-desc">Memoria persistente SQLite</span>
         </div>
         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
           <div class="infra-item">
-            <span style="font-size:12px; color:var(--text-dim);">Líneas de código</span>
-            <span class="infra-item-name">2.872</span>
-          </div>
-          <div class="infra-item">
             <span style="font-size:12px; color:var(--text-dim);">Tests</span>
-            <span class="infra-item-name">56 passing</span>
+            <span class="infra-item-name">114 passing</span>
           </div>
         </div>
       </div>
@@ -1814,7 +2024,7 @@ footer a {
       </div>
       <div class="flow-card fade-in">
         <div><div class="flow-cmd">/alfred config</div></div>
-        <div class="flow-desc">Configurar autonomía, stack, compliance, personalidad y <strong style="color: var(--gold);">agentes opcionales</strong>. Incluye descubrimiento contextual: Alfred analiza tu proyecto y sugiere qué agentes activar.</div>
+        <div class="flow-desc">Configurar autonomia, stack, compliance, personalidad, <strong style="color: var(--gold);">agentes opcionales</strong> y <strong style="color: var(--gold);">memoria persistente</strong>. Incluye descubrimiento contextual: Alfred analiza tu proyecto y sugiere que agentes activar.</div>
         <div></div>
       </div>
       <div class="flow-card fade-in">
@@ -1837,12 +2047,13 @@ footer a {
     <div class="fade-in" style="margin-top: 32px; background: var(--bg-card); border: 1px solid rgba(201,169,110,0.2); border-radius: 10px; padding: 24px 28px;">
       <p style="font-size: 14px; color: var(--text-muted); line-height: 1.7;">
         <strong style="color: var(--gold);">Agentes opcionales en los flujos:</strong>
-        los 6 agentes opcionales no tienen comandos propios. Se activan con
-        <strong style="color: var(--blue);">/alfred config</strong> y a partir de ahí se integran automáticamente
-        en los flujos existentes. Por ejemplo, si activas el <em>data-engineer</em>, participará en la fase de
+        los 7 agentes opcionales no tienen comandos propios. Se activan con
+        <strong style="color: var(--blue);">/alfred config</strong> y a partir de ahi se integran automaticamente
+        en los flujos existentes. Por ejemplo, si activas el <em>data-engineer</em>, participara en la fase de
         arquitectura de <strong style="color: var(--blue);">/alfred feature</strong>; si activas el <em>seo-specialist</em>,
-        intervendrá en la fase de calidad de <strong style="color: var(--blue);">/alfred ship</strong>.
-        Alfred decide cuándo invocar a cada agente según el contexto del flujo.
+        intervendra en la fase de calidad de <strong style="color: var(--blue);">/alfred ship</strong>; si activas
+        <em>El Bibliotecario</em>, Alfred consultara el historial de decisiones antes de cada flujo.
+        Alfred decide cuando invocar a cada agente segun el contexto del flujo.
       </p>
     </div>
   </div>
@@ -2083,15 +2294,198 @@ footer a {
           Sin necesidad de ejecutar ningún comando, Alfred vigila automáticamente tu sesión de trabajo
           mediante hooks que se activan en cada operación relevante.
         </p>
-        <ul class="use-case-steps" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 24px;">
-          <li><strong style="color: var(--text);">Guardia de secretos</strong> -- bloquea la escritura de API keys, tokens o contraseñas en el código</li>
-          <li><strong style="color: var(--text);">Quality gate</strong> -- verifica que los tests pasen después de cada cambio significativo</li>
-          <li><strong style="color: var(--text);">Vigilancia de dependencias</strong> -- detecta nuevas librerías y notifica al auditor de seguridad</li>
-          <li><strong style="color: var(--text);">Guardia ortográfico</strong> -- detecta palabras castellanas sin tilde al escribir o editar ficheros</li>
+        <ul class="use-case-steps protection-grid">
+          <li><strong style="color: var(--text);">Guardia de secretos</strong> -- bloquea la escritura de API keys, tokens o contrasenas en el codigo</li>
+          <li><strong style="color: var(--text);">Quality gate</strong> -- verifica que los tests pasen despues de cada cambio significativo</li>
+          <li><strong style="color: var(--text);">Vigilancia de dependencias</strong> -- detecta nuevas librerias y notifica al auditor de seguridad</li>
+          <li><strong style="color: var(--text);">Guardia ortografico</strong> -- detecta palabras castellanas sin tilde al escribir o editar ficheros</li>
+          <li><strong style="color: var(--text);">Captura de memoria</strong> -- registra automaticamente eventos del flujo de trabajo en la memoria persistente del proyecto</li>
         </ul>
       </div>
 
     </div>
+  </div>
+</section>
+
+<!-- ─── Memoria persistente ────────────────────── -->
+<section id="memoria" style="background: var(--bg-surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label" style="color: var(--gold);">Nuevo en v0.2.0</div>
+      <h2 class="section-title">Memoria persistente</h2>
+      <p class="section-desc">
+        Alfred Dev recuerda decisiones, commits e iteraciones entre sesiones.
+        La memoria se almacena en una base de datos SQLite local dentro de cada proyecto,
+        sin dependencias externas ni servicios remotos.
+      </p>
+    </div>
+
+    <!-- Diagrama de trazabilidad -->
+    <div class="fade-in" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 32px; margin-bottom: 32px;">
+      <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text-bright); margin-bottom: 20px;">Trazabilidad completa</h3>
+      <p style="font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 20px;">
+        Cada decision queda enlazada con el problema que la origino, los commits que la implementaron y la validacion que la confirmo.
+        Todo referenciable con IDs verificables.
+      </p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 16px 0;">
+        <span style="font-family: var(--font-mono); font-size: 13px; color: var(--purple); background: rgba(160,126,232,0.08); border: 1px solid rgba(160,126,232,0.15); padding: 8px 16px; border-radius: 6px;">Problema</span>
+        <span style="color: var(--text-dim); font-size: 18px;">&#8594;</span>
+        <span style="font-family: var(--font-mono); font-size: 13px; color: var(--gold); background: rgba(201,169,110,0.08); border: 1px solid rgba(201,169,110,0.15); padding: 8px 16px; border-radius: 6px;">Decision [D#id]</span>
+        <span style="color: var(--text-dim); font-size: 18px;">&#8594;</span>
+        <span style="font-family: var(--font-mono); font-size: 13px; color: var(--green); background: rgba(78,201,144,0.08); border: 1px solid rgba(78,201,144,0.15); padding: 8px 16px; border-radius: 6px;">Commit [C#sha]</span>
+        <span style="color: var(--text-dim); font-size: 18px;">&#8594;</span>
+        <span style="font-family: var(--font-mono); font-size: 13px; color: var(--blue); background: rgba(91,156,245,0.08); border: 1px solid rgba(91,156,245,0.15); padding: 8px 16px; border-radius: 6px;">Validacion</span>
+      </div>
+    </div>
+
+    <!-- Componentes -->
+    <div class="agents-grid memory-grid">
+
+      <div class="fade-in" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px;">
+        <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Base de datos local</h4>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+          SQLite con modo WAL para escrituras concurrentes. Almacena decisiones, commits, iteraciones y eventos
+          en <code style="font-family: var(--font-mono); font-size: 12px; color: var(--blue);">.claude/alfred-memory.db</code>
+          dentro de cada proyecto. Permisos 0600 por defecto.
+        </p>
+      </div>
+
+      <div class="fade-in" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px;">
+        <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Busqueda inteligente</h4>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+          Texto completo con FTS5 cuando esta disponible, con fallback automatico a LIKE para entornos sin extension FTS.
+          Busca en titulos de decisiones, razones, alternativas descartadas y mensajes de commit.
+        </p>
+      </div>
+
+      <div class="fade-in" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px;">
+        <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Captura automatica</h4>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+          Un hook PostToolUse registra automaticamente eventos del flujo de trabajo: inicio y fin de iteraciones,
+          cambios de fase. Las decisiones arquitectonicas se registran a traves del Bibliotecario o del servidor MCP.
+        </p>
+      </div>
+
+      <div class="fade-in" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px;">
+        <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Servidor MCP integrado</h4>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+          6 herramientas accesibles desde cualquier agente via MCP stdio: buscar, registrar decisiones, registrar commits,
+          consultar iteraciones, linea temporal de eventos y estadisticas. Sin dependencias externas.
+        </p>
+      </div>
+
+      <div class="fade-in" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px;">
+        <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Contexto de sesion</h4>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+          Al iniciar cada sesion, se inyectan automaticamente las ultimas 5 decisiones y la iteracion activa.
+          Esto da continuidad al trabajo sin que el usuario tenga que recordar donde lo dejo.
+        </p>
+      </div>
+
+      <div class="fade-in" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px;">
+        <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Seguridad integrada</h4>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+          Sanitizacion de secretos con los mismos patrones que secret-guard.sh: API keys, tokens, JWT, cadenas de conexion
+          y claves privadas se redactan antes de almacenarse. Permisos 0600 en el fichero de base de datos.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- El Bibliotecario -->
+    <div class="fade-in" style="margin-top: 48px; background: var(--bg-card); border: 1px solid rgba(201,169,110,0.25); border-radius: 10px; padding: 32px;">
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(201,169,110,0.1); border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="13" y2="11"/></svg>
+        </div>
+        <div>
+          <h3 style="font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text-bright);">El Bibliotecario</h3>
+          <p style="font-size: 13px; color: var(--gold);">Agente opcional -- memoria del proyecto</p>
+        </div>
+      </div>
+      <p style="font-size: 14px; color: var(--text-muted); line-height: 1.8; margin-bottom: 20px;">
+        El Bibliotecario es el agente que responde consultas historicas sobre el proyecto. A diferencia de otros agentes
+        que trabajan sobre el codigo actual, este se centra en el <em>por que</em> de las decisiones pasadas: que se decidio,
+        cuando, que alternativas se descartaron y que commits implementaron cada decision.
+      </p>
+      <p style="font-size: 14px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px;">
+        Tiene una regla infranqueable: <strong style="color: var(--text-bright);">siempre cita las fuentes</strong>. Cada afirmacion
+        incluye referencias verificables con formato <code style="font-family: var(--font-mono); font-size: 12px; color: var(--gold);">[D#42]</code> para decisiones,
+        <code style="font-family: var(--font-mono); font-size: 12px; color: var(--green);">[C#a1b2c3d]</code> para commits
+        y <code style="font-family: var(--font-mono); font-size: 12px; color: var(--blue);">[I#7]</code> para iteraciones.
+        Si no encuentra evidencia, lo dice en lugar de inventar.
+      </p>
+
+      <div style="font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 8px; padding: 20px; line-height: 1.8;">
+        <div style="color: var(--text-dim); margin-bottom: 8px;">Ejemplo de consulta:</div>
+        <div style="color: var(--blue); margin-bottom: 12px;">> Por que usamos SQLite en lugar de PostgreSQL para la memoria?</div>
+        <div style="color: var(--text);">
+          Se eligio SQLite porque el requisito era cero dependencias externas
+          <span style="color: var(--gold);">[D#12]</span>.
+          La alternativa de PostgreSQL se descarto por requerir un servicio externo corriendo
+          <span style="color: var(--gold);">[D#12, alternativas]</span>.
+          La implementacion se hizo en el commit
+          <span style="color: var(--green);">[C#1833e83]</span>
+          dentro de la iteracion
+          <span style="color: var(--blue);">[I#3]</span>.
+        </div>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <p style="font-size: 13px; color: var(--text-dim); line-height: 1.7;">
+          <strong style="color: var(--text-muted);">Activacion:</strong> se habilita desde
+          <strong style="color: var(--blue);">/alfred config</strong> en la seccion de memoria persistente.
+          Una vez activo, Alfred le delega automaticamente las consultas historicas que surjan durante cualquier flujo.
+        </p>
+      </div>
+    </div>
+
+    <!-- FAQ inline de memoria -->
+    <div class="fade-in" style="margin-top: 32px;">
+      <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text-bright); margin-bottom: 16px;">Preguntas sobre la memoria</h3>
+      <div class="faq-list" style="max-width: none;">
+        <div class="faq-item">
+          <button class="faq-question">
+            <span class="faq-question-text">Donde se almacenan los datos?</span>
+          </button>
+          <div class="faq-answer">
+            En el fichero <code style="font-family: var(--font-mono); font-size: 12px; color: var(--blue);">.claude/alfred-memory.db</code>
+            dentro de la raiz de cada proyecto. Es un fichero SQLite local, no se envia nada a servicios externos.
+            Anadelo a <code style="font-family: var(--font-mono); font-size: 12px; color: var(--blue);">.gitignore</code> si no quieres versionarlo.
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">
+            <span class="faq-question-text">La memoria se activa sola?</span>
+          </button>
+          <div class="faq-answer">
+            No. La activacion es explicitamente opcional. Se habilita desde <strong>/alfred config</strong> en la seccion
+            de memoria. Si no la activas, no se crea la base de datos ni se captura nada.
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">
+            <span class="faq-question-text">Que pasa con los secretos?</span>
+          </button>
+          <div class="faq-answer">
+            Todo el contenido pasa por la misma sanitizacion que usa el hook secret-guard.sh antes de almacenarse.
+            Claves de API, tokens, JWT, cadenas de conexion y cabeceras de clave privada se redactan automaticamente.
+            El fichero de base de datos tiene permisos 0600 (solo lectura/escritura para el propietario).
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">
+            <span class="faq-question-text">Puedo borrar la memoria?</span>
+          </button>
+          <div class="faq-answer">
+            Si. Basta con eliminar el fichero <code style="font-family: var(--font-mono); font-size: 12px; color: var(--blue);">.claude/alfred-memory.db</code>.
+            Tambien puedes desactivar la memoria desde <strong>/alfred config</strong>: los datos existentes se conservan pero
+            dejan de consultarse y no se capturan nuevos eventos.
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -2108,33 +2502,33 @@ footer a {
     </div>
 
     <div class="fade-in">
-      <div class="install-tabs">
-        <button class="install-tab active" data-tab="macos">macOS</button>
-        <button class="install-tab" data-tab="linux">Linux</button>
-        <button class="install-tab" data-tab="windows">Windows</button>
+      <div class="install-tabs" role="tablist" aria-label="Plataformas de instalación">
+        <button class="install-tab active" data-tab="macos" role="tab" aria-selected="true" aria-controls="panel-macos" id="tab-macos">macOS</button>
+        <button class="install-tab" data-tab="linux" role="tab" aria-selected="false" aria-controls="panel-linux" id="tab-linux">Linux</button>
+        <button class="install-tab" data-tab="windows" role="tab" aria-selected="false" aria-controls="panel-windows" id="tab-windows">Windows</button>
       </div>
 
-      <div class="install-panel active" data-tab="macos">
-        <code class="install-cmd">curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash</code>
+      <div class="install-panel active" data-tab="macos" role="tabpanel" id="panel-macos" aria-labelledby="tab-macos">
+        <code class="install-cmd" role="button" tabindex="0" aria-label="Copiar comando de instalación para macOS">curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash</code>
         <div class="install-reqs">
-          <strong>Requisitos:</strong> git, python3, Claude Code instalado.<br>
+          <strong>Requisitos:</strong> git, Python 3.10+, Claude Code instalado.<br>
           Tras la instalación, reinicia Claude Code y ejecuta <strong>/alfred help</strong>.
         </div>
       </div>
 
-      <div class="install-panel" data-tab="linux">
-        <code class="install-cmd">curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash</code>
+      <div class="install-panel" data-tab="linux" role="tabpanel" id="panel-linux" aria-labelledby="tab-linux">
+        <code class="install-cmd" role="button" tabindex="0" aria-label="Copiar comando de instalación para Linux">curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.sh | bash</code>
         <div class="install-reqs">
-          <strong>Requisitos:</strong> git, python3, Claude Code instalado.<br>
+          <strong>Requisitos:</strong> git, Python 3.10+, Claude Code instalado.<br>
           Tras la instalación, reinicia Claude Code y ejecuta <strong>/alfred help</strong>.
         </div>
       </div>
 
-      <div class="install-panel" data-tab="windows">
-        <code class="install-cmd">irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex</code>
+      <div class="install-panel" data-tab="windows" role="tabpanel" id="panel-windows" aria-labelledby="tab-windows">
+        <code class="install-cmd" role="button" tabindex="0" aria-label="Copiar comando de instalación para Windows">irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/install.ps1 | iex</code>
         <div class="install-reqs">
           <strong>Requisitos:</strong> git, PowerShell 5.1+ (preinstalado en Windows 10/11), Claude Code instalado.<br>
-          No necesita python3. Tras la instalación, reinicia Claude Code y ejecuta <strong>/alfred help</strong>.<br>
+          No necesita Python. Tras la instalación, reinicia Claude Code y ejecuta <strong>/alfred help</strong>.<br>
           Alternativa: también puedes usar el instalador bash con WSL o Git Bash.
         </div>
       </div>
@@ -2150,11 +2544,11 @@ footer a {
       <div class="uninstall-grid">
         <div class="uninstall-card">
           <h4>macOS / Linux</h4>
-          <code>curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/uninstall.sh | bash</code>
+          <code role="button" tabindex="0" aria-label="Copiar comando de desinstalación para macOS y Linux">curl -fsSL https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/uninstall.sh | bash</code>
         </div>
         <div class="uninstall-card">
           <h4>Windows (PowerShell)</h4>
-          <code>irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/uninstall.ps1 | iex</code>
+          <code role="button" tabindex="0" aria-label="Copiar comando de desinstalación para Windows">irm https://raw.githubusercontent.com/686f6c61/Claude-JARVIS-dev/main/uninstall.ps1 | iex</code>
         </div>
       </div>
     </div>
@@ -2168,6 +2562,91 @@ footer a {
         actualizar. También puedes volver a ejecutar el instalador: es idempotente.
       </p>
     </div>
+  </div>
+</section>
+
+<!-- ─── Configuracion ─────────────────────────── -->
+<section id="configuracion">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Personalización</div>
+      <h2 class="section-title">Configuración por proyecto</h2>
+      <p class="section-desc">
+        Cada proyecto tiene su propio fichero de configuración en
+        <code style="font-family: var(--font-mono); font-size: 13px; color: var(--blue);">.claude/alfred-dev.local.md</code>.
+        Se gestiona con <strong>/alfred config</strong>, que incluye descubrimiento contextual de agentes opcionales
+        y activación de memoria persistente.
+      </p>
+    </div>
+
+    <div class="fade-in config-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
+      <!-- Bloque YAML -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px; overflow-x: auto;">
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px;">alfred-dev.local.md</div>
+        <pre style="font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: var(--text); margin: 0; white-space: pre;"><span style="color: var(--text-dim);">---</span>
+<span style="color: var(--blue);">autonomia:</span>
+  <span style="color: var(--text-muted);">producto:</span> interactivo
+  <span style="color: var(--text-muted);">arquitectura:</span> interactivo
+  <span style="color: var(--text-muted);">desarrollo:</span> semi-autonomo
+  <span style="color: var(--text-muted);">seguridad:</span> autonomo
+  <span style="color: var(--text-muted);">calidad:</span> semi-autonomo
+  <span style="color: var(--text-muted);">documentacion:</span> autonomo
+  <span style="color: var(--text-muted);">devops:</span> semi-autonomo
+
+<span style="color: var(--blue);">agentes_opcionales:</span>
+  <span style="color: var(--text-muted);">data-engineer:</span> <span style="color: var(--green);">true</span>
+  <span style="color: var(--text-muted);">ux-reviewer:</span> <span style="color: var(--red);">false</span>
+  <span style="color: var(--text-muted);">github-manager:</span> <span style="color: var(--green);">true</span>
+  <span style="color: var(--text-muted);">librarian:</span> <span style="color: var(--green);">true</span>
+
+<span style="color: var(--blue);">memoria:</span>
+  <span style="color: var(--text-muted);">enabled:</span> <span style="color: var(--green);">true</span>
+  <span style="color: var(--text-muted);">capture_decisions:</span> <span style="color: var(--green);">true</span>
+  <span style="color: var(--text-muted);">capture_commits:</span> <span style="color: var(--green);">true</span>
+  <span style="color: var(--text-muted);">retention_days:</span> 365
+
+<span style="color: var(--blue);">personalidad:</span>
+  <span style="color: var(--text-muted);">nivel_sarcasmo:</span> 3
+  <span style="color: var(--text-muted);">celebrar_victorias:</span> <span style="color: var(--green);">true</span>
+  <span style="color: var(--text-muted);">insultar_malas_practicas:</span> <span style="color: var(--green);">true</span>
+<span style="color: var(--text-dim);">---</span></pre>
+      </div>
+
+      <!-- Explicacion -->
+      <div>
+        <div style="margin-bottom: 24px;">
+          <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px;">Autonomía por fase</h4>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+            Controla cuánta intervención necesitas en cada fase del flujo.
+            <strong>Interactivo</strong> pide aprobación en cada paso,
+            <strong>semi-autónomo</strong> avanza solo pero te consulta las decisiones clave, y
+            <strong>autónomo</strong> ejecuta sin interrupciones.
+          </p>
+        </div>
+        <div style="margin-bottom: 24px;">
+          <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px;">Agentes opcionales</h4>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+            Activa solo los que necesites. Alfred analiza tu proyecto y te sugiere cuáles habilitar
+            según el stack detectado. Se pueden cambiar en cualquier momento sin reinstalar.
+          </p>
+        </div>
+        <div style="margin-bottom: 24px;">
+          <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px;">Memoria persistente</h4>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+            Activación opcional. Configura qué se captura (decisiones, commits), la retención
+            en días y el comportamiento del Bibliotecario.
+          </p>
+        </div>
+        <div>
+          <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px;">Personalidad</h4>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
+            El nivel de sarcasmo va de 0 (profesional formal) a 5 (ácido con cariño).
+            Las celebraciones y los avisos por malas prácticas se activan por separado.
+          </p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -2235,11 +2714,12 @@ footer a {
           <span class="faq-question-text">Qué son los agentes opcionales?</span>
         </button>
         <div class="faq-answer">
-          Son 6 agentes especializados que puedes activar según las necesidades de tu proyecto:
+          Son 7 agentes especializados que puedes activar segun las necesidades de tu proyecto:
           <strong>data-engineer</strong> (bases de datos), <strong>ux-reviewer</strong> (accesibilidad y usabilidad),
-          <strong>performance-engineer</strong> (rendimiento), <strong>github-manager</strong> (gestión de repositorios),
-          <strong>seo-specialist</strong> (posicionamiento web) y <strong>copywriter</strong> (textos y ortografía).<br><br>
-          Alfred analiza tu proyecto y te sugiere cuáles activar. También puedes gestionarlos manualmente
+          <strong>performance-engineer</strong> (rendimiento), <strong>github-manager</strong> (gestion de repositorios),
+          <strong>seo-specialist</strong> (posicionamiento web), <strong>copywriter</strong> (textos y ortografia)
+          y <strong>El Bibliotecario</strong> (memoria persistente: consultas historicas sobre decisiones, commits e iteraciones del proyecto).<br><br>
+          Alfred analiza tu proyecto y te sugiere cuales activar. Tambien puedes gestionarlos manualmente
           con <strong>/alfred config</strong>. Se activan o desactivan sin reinstalar nada.
         </div>
       </div>
@@ -2259,8 +2739,22 @@ footer a {
 
       <div class="faq-item fade-in">
         <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span class="faq-question-text">Que es la memoria persistente?</span>
+        </button>
+        <div class="faq-answer">
+          Es una base de datos SQLite local que almacena las decisiones, commits e iteraciones de cada proyecto.
+          Se activa opcionalmente desde <strong>/alfred config</strong>. Una vez activa, Alfred registra automaticamente
+          los eventos del flujo de trabajo y el agente <strong>El Bibliotecario</strong> puede responder consultas historicas
+          como "por que se eligio esta arquitectura" o "que se hizo en la ultima iteracion", citando siempre las fuentes.
+          Los datos no salen del proyecto: todo queda en <code style="font-family: var(--font-mono); font-size: 12px; color: var(--blue);">.claude/alfred-memory.db</code>.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
           <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          <span class="faq-question-text">Cuánto cuesta?</span>
+          <span class="faq-question-text">Cuanto cuesta?</span>
         </button>
         <div class="faq-answer">
           Nada. Alfred Dev es software libre bajo licencia MIT. Puedes usarlo, modificarlo
@@ -2292,6 +2786,70 @@ footer a {
         </div>
       </div>
 
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="faq-question-text">Puedo contribuir al proyecto?</span>
+        </button>
+        <div class="faq-answer">
+          Sí. Alfred Dev es software libre bajo licencia MIT. Puedes reportar bugs, proponer mejoras o enviar
+          pull requests en el <a href="https://github.com/686f6c61/Claude-JARVIS-dev/issues">repositorio de GitHub</a>.
+          Las contribuciones de código, documentación, traducciones o simplemente reportar problemas son bienvenidas.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span class="faq-question-text">Los agentes consumen tokens adicionales?</span>
+        </button>
+        <div class="faq-answer">
+          Sí, como cualquier interacción con Claude. Los agentes son instrucciones de sistema que guían las respuestas,
+          así que consumen contexto proporcional a su complejidad. En la práctica, el coste adicional es moderado:
+          los system prompts de los agentes están optimizados para ocupar el mínimo posible sin perder precisión.
+          Los agentes opcionales solo se cargan si los activas, así que el contexto base es el de los 8 de núcleo.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span class="faq-question-text">Puedo usar Alfred en un monorepo?</span>
+        </button>
+        <div class="faq-answer">
+          Alfred detecta el stack del directorio de trabajo actual, no del repositorio raíz. Si ejecutas Claude Code
+          desde la raíz de un monorepo, detectará todos los lenguajes presentes. Si lo ejecutas desde un paquete concreto,
+          se centrará en ese paquete. La memoria persistente es por directorio de trabajo, así que cada paquete puede
+          tener su propia base de datos de decisiones si lo configuras así.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span class="faq-question-text">Qué pasa si una quality gate falla?</span>
+        </button>
+        <div class="faq-answer">
+          El flujo se detiene en la fase actual y Alfred te explica qué no se cumple: tests que fallan,
+          vulnerabilidades detectadas, documentación incompleta o lo que corresponda. Tienes tres opciones:
+          corregir el problema y reintentar la gate, pedir a Alfred que te ayude a resolverlo (por ejemplo,
+          con <strong>/alfred fix</strong> si es un bug), o continuar manualmente asumiendo el riesgo.
+          Alfred nunca avanza en silencio si una gate no se supera.
+        </div>
+      </div>
+
+      <div class="faq-item fade-in">
+        <button class="faq-question">
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span class="faq-question-text">Funciona con OpenCode?</span>
+        </button>
+        <div class="faq-answer">
+          Está en desarrollo. OpenCode es un editor de código basado en terminal, de código abierto, que comparte
+          la arquitectura de plugins con Claude Code. Alfred Dev está adaptándose para ser compatible con ambos
+          entornos. La versión para OpenCode se anunciará en el repositorio cuando esté lista para uso general.
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -2307,8 +2865,8 @@ footer a {
       <a href="https://github.com/686f6c61/Claude-JARVIS-dev">GitHub</a>
     </p>
     <p style="margin-top: 8px;">
-      Plugin de <a href="https://claude.ai/claude-code">Claude Code</a>.
-      14 agentes. 56 skills. 10 comandos. De la idea a producción.
+      Plugin de <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a>.
+      15 agentes. 56 skills. 10 comandos. Memoria persistente. De la idea a producción.
     </p>
     <p style="margin-top: 24px; font-size: 12px; color: var(--text-dim);">
       Ingeniería de software automatizada para Claude Code.
@@ -2331,6 +2889,26 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
+/* ── Hamburger menu ── */
+const hamburger = document.getElementById('navHamburger');
+const navLinks = document.getElementById('navLinks');
+
+hamburger.addEventListener('click', () => {
+  const isOpen = hamburger.classList.toggle('open');
+  navLinks.classList.toggle('open');
+  hamburger.setAttribute('aria-expanded', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+});
+
+navLinks.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    hamburger.classList.remove('open');
+    navLinks.classList.remove('open');
+    hamburger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  });
+});
+
 /* ── Copiar al portapapeles ── */
 function copyCmd(el) {
   const cmd = el.dataset.cmd;
@@ -2345,13 +2923,17 @@ function copyCmd(el) {
   });
 }
 
-/* ── Tabs de instalacion ── */
+/* ── Tabs de instalacion con ARIA ── */
 document.querySelectorAll('.install-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     const target = tab.dataset.tab;
-    document.querySelectorAll('.install-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.install-tab').forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.install-panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
     document.querySelector(`.install-panel[data-tab="${target}"]`).classList.add('active');
   });
 });
@@ -2359,20 +2941,33 @@ document.querySelectorAll('.install-tab').forEach(tab => {
 /* ── Copiar bloques de codigo de instalacion/desinstalacion ── */
 document.querySelectorAll('.install-cmd, .uninstall-card code').forEach(el => {
   el.title = 'Clic para copiar';
-  el.addEventListener('click', () => {
+  function doCopy() {
     const text = el.textContent.trim();
     navigator.clipboard.writeText(text).then(() => {
       const original = el.textContent;
       el.textContent = 'Copiado al portapapeles';
       setTimeout(() => { el.textContent = original; }, 1500);
     });
+  }
+  el.addEventListener('click', doCopy);
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doCopy(); }
   });
 });
 
-/* ── FAQ acordeon ── */
-document.querySelectorAll('.faq-question').forEach(btn => {
+/* ── FAQ acordeon con ARIA ── */
+document.querySelectorAll('.faq-question').forEach((btn, i) => {
+  const answer = btn.nextElementSibling;
+  const answerId = 'faq-answer-' + i;
+  answer.id = answerId;
+  answer.setAttribute('role', 'region');
+  answer.setAttribute('aria-labelledby', 'faq-btn-' + i);
+  btn.id = 'faq-btn-' + i;
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-controls', answerId);
   btn.addEventListener('click', () => {
-    btn.parentElement.classList.toggle('open');
+    const isOpen = btn.parentElement.classList.toggle('open');
+    btn.setAttribute('aria-expanded', isOpen);
   });
 });
 </script>
