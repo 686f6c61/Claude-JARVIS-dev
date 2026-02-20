@@ -71,7 +71,7 @@ class TestOptionalAgents(unittest.TestCase):
         agents = DEFAULT_CONFIG["agentes_opcionales"]
         expected = {
             "data-engineer", "ux-reviewer", "performance-engineer",
-            "github-manager", "seo-specialist", "copywriter",
+            "github-manager", "seo-specialist", "copywriter", "librarian",
         }
         self.assertEqual(set(agents.keys()), expected)
 

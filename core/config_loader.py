@@ -81,6 +81,7 @@ DEFAULT_CONFIG = {
         "github-manager": False,
         "seo-specialist": False,
         "copywriter": False,
+        "librarian": False,
     },
     "notas": "",
 }

@@ -17,10 +17,10 @@ class TestPersonality(unittest.TestCase):
             "alfred", "product-owner", "architect", "senior-dev",
             "security-officer", "qa-engineer", "devops-engineer", "tech-writer",
         }
-        # Opcionales: 6 agentes predefinidos que el usuario activa
+        # Opcionales: 7 agentes predefinidos que el usuario activa
         optional = {
             "data-engineer", "ux-reviewer", "performance-engineer",
-            "github-manager", "seo-specialist", "copywriter",
+            "github-manager", "seo-specialist", "copywriter", "librarian",
         }
         self.assertEqual(set(AGENTS.keys()), core | optional)
 
@@ -28,7 +28,7 @@ class TestPersonality(unittest.TestCase):
         """Los agentes opcionales deben tener el campo 'opcional': True."""
         optional_names = {
             "data-engineer", "ux-reviewer", "performance-engineer",
-            "github-manager", "seo-specialist", "copywriter",
+            "github-manager", "seo-specialist", "copywriter", "librarian",
         }
         for name in optional_names:
             self.assertTrue(
