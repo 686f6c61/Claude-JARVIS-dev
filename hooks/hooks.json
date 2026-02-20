@@ -66,6 +66,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/memory-capture.py",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }
