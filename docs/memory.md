@@ -37,6 +37,8 @@ erDiagram
         TEXT impact
         TEXT phase
         TEXT decided_at
+        TEXT tags "JSON, default '[]'"
+        TEXT status "active|superseded|deprecated"
     }
 
     commits {
@@ -49,12 +51,20 @@ erDiagram
         INTEGER deletions
         TEXT committed_at
         INTEGER iteration_id FK "nullable"
+        TEXT files "JSON, default '[]'"
     }
 
     commit_links {
         INTEGER commit_id FK "PK compuesta"
         INTEGER decision_id FK "PK compuesta"
         TEXT link_type
+    }
+
+    decision_links {
+        INTEGER source_id FK "PK compuesta"
+        INTEGER target_id FK "PK compuesta"
+        TEXT link_type "supersedes|depends_on|contradicts|relates"
+        TEXT created_at
     }
 
     events {
@@ -76,17 +86,21 @@ erDiagram
     iterations ||--o{ events : "registra"
     commits ||--o{ commit_links : "vincula"
     decisions ||--o{ commit_links : "vincula"
+    decisions ||--o{ decision_links : "origen"
+    decisions ||--o{ decision_links : "destino"
 ```
 
 ### Detalle de cada tabla
 
 **iterations** almacena los ciclos de trabajo. El campo `command` indica el tipo de flujo (`feature`, `fix`, `spike`, `ship`, `audit`). El campo `status` evoluciona de `active` a `completed` o `abandoned`. Los campos `phases_completed` y `artifacts` son JSON opcionales que enriquecen el registro.
 
-**decisions** captura el razonamiento formal. Cada decision tiene un `title` corto, el `context` del problema, la opcion `chosen`, las `alternatives` descartadas (almacenadas como array JSON), la `rationale` que justifica la eleccion, el `impact` (low, medium, high, critical) y la `phase` del flujo en la que se tomo. Si no se proporciona `iteration_id`, se vincula automaticamente a la iteracion activa.
+**decisions** captura el razonamiento formal. Cada decision tiene un `title` corto, el `context` del problema, la opcion `chosen`, las `alternatives` descartadas (almacenadas como array JSON), la `rationale` que justifica la eleccion, el `impact` (low, medium, high, critical) y la `phase` del flujo en la que se tomo. Si no se proporciona `iteration_id`, se vincula automaticamente a la iteracion activa. Desde la v2 del esquema, cada decision incorpora `tags` (array JSON de etiquetas libres, por defecto vacio) y `status` (`active`, `superseded` o `deprecated`, por defecto `active`) para gestionar su ciclo de vida sin duplicar registros.
 
-**commits** registra metadatos de los commits de Git. El campo `sha` es unico para garantizar idempotencia: si se intenta registrar un commit que ya existe, la operacion se ignora silenciosamente. Esto permite que la captura automatica invoque `log_commit()` sin preocuparse de duplicados.
+**commits** registra metadatos de los commits de Git. El campo `sha` es unico para garantizar idempotencia: si se intenta registrar un commit que ya existe, la operacion se ignora silenciosamente. Esto permite que la captura automatica invoque `log_commit()` sin preocuparse de duplicados. Desde la v2, el campo `files` (array JSON de rutas) almacena los ficheros afectados por el commit, facilitando busquedas por fichero y trazabilidad de cambios.
 
 **commit_links** establece vinculos entre commits y decisiones. El campo `link_type` indica el tipo de relacion: `implements` (el commit implementa la decision), `reverts` (lo deshace) o `relates` (relacion generica). La clave primaria compuesta `(commit_id, decision_id)` impide duplicados.
+
+**decision_links** (v2) establece relaciones entre pares de decisiones. El campo `link_type` admite cuatro valores: `supersedes` (la decision origen reemplaza a la destino), `depends_on` (depende de ella), `contradicts` (entra en conflicto) y `relates` (relacion generica). La clave primaria compuesta `(source_id, target_id)` impide duplicados. Las consultas son bidireccionales: `get_decision_links(id)` devuelve tanto los enlaces donde la decision es origen como aquellos donde es destino.
 
 **events** captura hechos mecanicos del flujo: fases completadas, gates superadas, aprobaciones. El campo `payload` es un JSON libre que almacena datos adicionales. Los eventos proporcionan la cronologia detallada que las decisiones no cubren.
 
@@ -103,6 +117,7 @@ El esquema incluye cinco indices para acelerar las consultas mas frecuentes:
 | `idx_commits_iteration` | commits | iteration_id | Obtener commits de una iteracion |
 | `idx_events_iteration` | events | iteration_id | Obtener eventos de una iteracion |
 | `idx_events_type` | events | event_type | Filtrar eventos por tipo |
+| `idx_decision_links_target` | decision_links | target_id | Busqueda bidireccional de relaciones entre decisiones |
 
 
 ## FTS5 (busqueda de texto completo)
@@ -121,7 +136,7 @@ Cuando FTS5 esta disponible, `MemoryDB` crea la tabla virtual `memory_fts` con t
 | `source_id` | TEXT | ID del registro original (cast a texto) |
 | `content` | TEXT | Texto indexado (concatenacion de campos relevantes) |
 
-Para las decisiones, el campo `content` concatena `title`, `context`, `chosen` y `rationale`. Para los commits, contiene unicamente el `message`.
+Para las decisiones, el campo `content` concatena `title`, `context`, `chosen`, `rationale` y `alternatives` (desde v2). Para los commits, contiene unicamente el `message`.
 
 ### Triggers de sincronizacion
 
@@ -198,7 +213,7 @@ Claude Code lanza el servidor al inicio de sesion y lo mantiene vivo como proces
 
 ### Herramientas expuestas
 
-El servidor expone seis herramientas. Cada una se describe con un JSON Schema de entrada y se despacha internamente al metodo correspondiente de `MemoryDB`.
+El servidor expone quince herramientas. Las diez originales cubren busqueda, registro y consulta; las cinco nuevas (v2) anaden gestion del ciclo de vida de decisiones, validacion de integridad y exportacion/importacion. Cada una se describe con un JSON Schema de entrada y se despacha internamente al metodo correspondiente de `MemoryDB`.
 
 #### `memory_search(query, limit?, iteration_id?)`
 
@@ -209,6 +224,10 @@ Busca en la memoria del proyecto (decisiones y commits) por texto. Usa FTS5 si e
 | `query` | string | si | Termino de busqueda textual |
 | `limit` | integer | no | Maximo de resultados (por defecto 20) |
 | `iteration_id` | integer | no | Filtrar por iteracion concreta |
+| `since` | string | no | Fecha minima (ISO 8601) para filtrar resultados |
+| `until` | string | no | Fecha maxima (ISO 8601) para filtrar resultados |
+| `tags` | string[] | no | Filtrar decisiones que contengan todas las etiquetas indicadas |
+| `status` | string | no | Filtrar decisiones por estado (`active`, `superseded`, `deprecated`) |
 
 #### `memory_log_decision(title, chosen, context?, alternatives?, rationale?, impact?, phase?)`
 
@@ -223,6 +242,7 @@ Registra una decision de diseno formal. Se vincula automaticamente a la iteracio
 | `rationale` | string | no | Justificacion de la eleccion |
 | `impact` | enum | no | Nivel: `low`, `medium`, `high`, `critical` |
 | `phase` | string | no | Fase del flujo en la que se tomo |
+| `tags` | string[] | no | Etiquetas libres para categorizar la decision |
 
 #### `memory_log_commit(sha, message?, decision_ids?, iteration_id?)`
 
@@ -234,6 +254,7 @@ Registra un commit y opcionalmente lo vincula a decisiones previas. Si el SHA ya
 | `message` | string | no | Mensaje del commit |
 | `decision_ids` | integer[] | no | IDs de decisiones a vincular |
 | `iteration_id` | integer | no | ID de iteracion (auto-detectado si se omite) |
+| `files` | string[] | no | Lista de ficheros afectados por el commit |
 
 #### `memory_get_iteration(id?)`
 
@@ -256,6 +277,61 @@ Obtiene la cronologia completa de eventos de una iteracion, ordenados del mas an
 Devuelve estadisticas generales de la memoria: contadores de iteraciones, decisiones, commits y eventos; estado de FTS5; version del esquema; fecha de creacion; ruta de la DB.
 
 No requiere parametros.
+
+#### `memory_get_decisions(tags?, status?)`
+
+Obtiene todas las decisiones registradas, con filtros opcionales por etiquetas y estado. Util para obtener listados filtrados sin necesidad de texto de busqueda.
+
+| Parametro | Tipo | Obligatorio | Descripcion |
+|-----------|------|-------------|-------------|
+| `tags` | string[] | no | Filtrar por etiquetas (coincidencia total) |
+| `status` | string | no | Filtrar por estado (`active`, `superseded`, `deprecated`) |
+
+#### `memory_update_decision(id, status?, tags?)`
+
+Actualiza el estado o las etiquetas de una decision existente sin duplicar registros. Permite gestionar el ciclo de vida de las decisiones: marcar una como `superseded` cuando se reemplaza, o como `deprecated` cuando deja de ser relevante.
+
+| Parametro | Tipo | Obligatorio | Descripcion |
+|-----------|------|-------------|-------------|
+| `id` | integer | si | ID de la decision a actualizar |
+| `status` | string | no | Nuevo estado: `active`, `superseded` o `deprecated` |
+| `tags` | string[] | no | Etiquetas a anadir (sin duplicar las existentes) |
+
+#### `memory_link_decisions(source_id, target_id, link_type)`
+
+Crea una relacion direccional entre dos decisiones. Permite construir el grafo de evolucion y dependencias de las decisiones del proyecto.
+
+| Parametro | Tipo | Obligatorio | Descripcion |
+|-----------|------|-------------|-------------|
+| `source_id` | integer | si | ID de la decision origen |
+| `target_id` | integer | si | ID de la decision destino |
+| `link_type` | string | si | Tipo de relacion: `supersedes`, `depends_on`, `contradicts`, `relates` |
+
+#### `memory_health()`
+
+Valida la integridad de la base de datos de memoria. Comprueba la version del esquema, la sincronizacion de FTS5, los permisos del fichero (0600) y el tamano de la base de datos (aviso si supera 50 MB). Devuelve un informe con estado general (`healthy`, `warnings`, `errors`) y la lista de problemas detectados.
+
+No requiere parametros.
+
+#### `memory_export(format, path?, iteration_id?)`
+
+Exporta decisiones a un fichero Markdown con formato ADR-like (Architecture Decision Record). Cada decision incluye fecha, estado, etiquetas, contexto, opcion elegida, alternativas descartadas, justificacion e iteracion asociada.
+
+| Parametro | Tipo | Obligatorio | Descripcion |
+|-----------|------|-------------|-------------|
+| `format` | string | si | Formato de exportacion (actualmente solo `markdown`) |
+| `path` | string | no | Ruta del fichero de salida |
+| `iteration_id` | integer | no | Exportar solo decisiones de una iteracion concreta |
+
+#### `memory_import(source, path?, limit?)`
+
+Importa datos desde fuentes externas a la memoria persistente. Admite dos fuentes: `git` (importa commits del historial Git) y `adr` (importa decisiones desde ficheros Markdown en formato ADR).
+
+| Parametro | Tipo | Obligatorio | Descripcion |
+|-----------|------|-------------|-------------|
+| `source` | string | si | Fuente de importacion: `git` o `adr` |
+| `path` | string | no | Ruta del repositorio (git) o directorio de ADRs (adr) |
+| `limit` | integer | no | Maximo de registros a importar (por defecto 100, solo git) |
 
 
 ## El Bibliotecario
@@ -291,7 +367,11 @@ Si no puede citar una fuente concreta, el Bibliotecario no incluye el dato en la
 
 ## Captura automatica
 
-La captura automatica funciona mediante el hook `memory-capture.py`, un script Python que se ejecuta como hook `PostToolUse` cada vez que Claude Code escribe o edita un fichero. El hook actua como un observador pasivo: nunca bloquea la operacion ni interfiere con el flujo de trabajo. Si algo falla --DB inexistente, JSON corrupto, configuracion ausente--, sale silenciosamente con `exit 0`.
+La captura automatica funciona mediante dos hooks complementarios. El hook original `memory-capture.py` captura eventos del flujo de trabajo (iteraciones, fases) observando el fichero de estado. El nuevo hook `commit-capture.py` (v0.2.3) captura commits automaticamente observando los comandos de terminal.
+
+### memory-capture.py (eventos de flujo)
+
+Este es un script Python que se ejecuta como hook `PostToolUse` cada vez que Claude Code escribe o edita un fichero. El hook actua como un observador pasivo: nunca bloquea la operacion ni interfiere con el flujo de trabajo. Si algo falla --DB inexistente, JSON corrupto, configuracion ausente--, sale silenciosamente con `exit 0`.
 
 La razon de automatizar la captura en lugar de depender de que los agentes registren eventos manualmente es la fiabilidad: un agente puede olvidarse de llamar a `memory_log_event()`, pero el hook siempre se ejecuta porque esta conectado al ciclo de vida de las herramientas de escritura.
 
@@ -312,6 +392,13 @@ Cuando detecta una escritura en el fichero de estado, el hook ejecuta tres compr
 ### Verificacion previa
 
 Antes de procesar el estado, el hook comprueba que la memoria esta habilitada leyendo el fichero `.claude/alfred-dev.local.md` del proyecto. Busca el patron `memoria:` seguido de `enabled: true` usando una expresion regular que tolera comentarios y otras claves intermedias.
+
+
+### commit-capture.py (commits automaticos)
+
+Este hook (v0.2.3) se ejecuta como `PostToolUse` en cada invocacion de Bash. Detecta comandos `git commit` mediante la expresion regular `(?:^|&&|\|\||;)\s*git\s+commit\b` y, si el commit se ejecuto con exito (exit code 0), extrae los metadatos del ultimo commit (`git log -1 --format=%H|%s|%an|%aI --name-only`) y los registra en la memoria con `MemoryDB.log_commit()`. La operacion es idempotente por SHA: si el commit ya existe, se ignora.
+
+El hook verifica tres condiciones antes de actuar: que el comando contenga `git commit`, que el codigo de salida sea 0 y que la memoria este habilitada. Si alguna falla, sale con codigo 0 sin bloquear.
 
 
 ## Flujo completo de captura y consulta
@@ -399,7 +486,11 @@ La purga de eventos se ejecuta automaticamente al arrancar el servidor MCP. El m
 
 ### Versionado del esquema
 
-La tabla `meta` almacena la version del esquema con la clave `schema_version`. La version actual es `1`. Este valor se usara en el futuro para detectar si es necesario aplicar migraciones al abrir una DB creada con una version anterior del plugin.
+La tabla `meta` almacena la version del esquema con la clave `schema_version`. La version actual es `2`.
+
+Desde la v0.2.3, el sistema incluye un mecanismo de migracion automatica. Al abrir una base de datos, `MemoryDB` compara la version almacenada con `_SCHEMA_VERSION`. Si es inferior, ejecuta las migraciones pendientes dentro de una transaccion y crea una copia de seguridad (`.bak`) antes de modificar el esquema. El diccionario `_MIGRATIONS` asocia cada version con la lista de sentencias SQL necesarias para migrar desde la version anterior.
+
+La migracion de v1 a v2 anade tres columnas (`decisions.tags`, `decisions.status`, `commits.files`) y crea la tabla `decision_links` con su indice. Al tratarse de operaciones `ALTER TABLE` y `CREATE TABLE`, son seguras y no requieren reescritura de datos existentes.
 
 
 ## Configuracion
@@ -448,7 +539,9 @@ Activar el agente `librarian` junto con la memoria es la combinacion recomendada
 
 | Fichero | Contenido |
 |---------|-----------|
-| `core/memory.py` | Clase `MemoryDB`, funcion `sanitize_content()`, esquema SQL, patrones de secretos, logica de FTS5 |
-| `mcp/memory_server.py` | Clase `MemoryMCPServer`, definicion de herramientas MCP, transporte JSON-RPC stdio |
-| `hooks/memory-capture.py` | Hook PostToolUse, deteccion de escrituras en state.json, captura automatica de eventos |
-| `agents/optional/librarian.md` | Definicion del agente Bibliotecario, reglas de cita, clasificacion de preguntas |
+| `core/memory.py` | Clase `MemoryDB`, funcion `sanitize_content()`, esquema SQL, migraciones, patrones de secretos, logica de FTS5 |
+| `mcp/memory_server.py` | Clase `MemoryMCPServer`, 15 herramientas MCP, transporte JSON-RPC stdio |
+| `hooks/memory-capture.py` | Hook PostToolUse (Write/Edit), deteccion de escrituras en state.json, captura de eventos de flujo |
+| `hooks/commit-capture.py` | Hook PostToolUse (Bash), deteccion de `git commit`, captura automatica de metadatos de commits |
+| `hooks/memory-compact.py` | Hook PreCompact, inyeccion de decisiones criticas como contexto protegido |
+| `agents/optional/librarian.md` | Definicion del agente Bibliotecario, 15 herramientas, gestion de ciclo de vida, citas verificables |

@@ -7,6 +7,26 @@ y el proyecto usa [versionado semántico](https://semver.org/lang/es/).
 
 ---
 
+## [0.2.3] - 2026-02-21
+
+### Added
+
+- **Memoria persistente v2**: migración de esquema con backup automático, etiquetas y estado en decisiones, relaciones entre decisiones (`supersedes`, `depends_on`, `contradicts`, `relates`), campo `files` en commits.
+- **5 herramientas MCP nuevas** (total 15): `memory_update_decision`, `memory_link_decisions`, `memory_health`, `memory_export`, `memory_import`.
+- **Filtros de búsqueda**: parámetros `since`, `until`, `tags` y `status` en `memory_search` y `memory_get_decisions`.
+- **Validación de integridad**: `memory_health` comprueba versión de esquema, FTS5, permisos y tamaño de la DB.
+- **Export/Import**: exportar decisiones a Markdown (formato ADR), importar desde historial Git e importar desde ficheros ADR existentes.
+- **Hook commit-capture.py** (PostToolUse Bash): auto-captura de commits en la memoria persistente. Detecta `git commit` con regex y registra SHA, mensaje, autor y ficheros.
+- **Hook memory-compact.py** (PreCompact): protege las decisiones críticas de la sesión durante la compactación de contexto.
+- **Inyección de contexto mejorada**: si hay iteración activa, session-start.sh inyecta las decisiones de esa iteración (no las 5 últimas globales). Muestra etiquetas de las decisiones.
+- ~49 tests nuevos. Total estimado: ~268 tests.
+
+### Changed
+
+- El Bibliotecario amplía sus capacidades: gestión del ciclo de vida de decisiones, validación de integridad, exportación e importación. 15 herramientas MCP documentadas.
+- `memory_log_decision` acepta parámetro `tags`. `memory_log_commit` acepta parámetro `files`.
+
+
 ## [0.2.2] - 2026-02-21
 
 ### Added
@@ -133,6 +153,7 @@ y el proyecto usa [versionado semántico](https://semver.org/lang/es/).
 
 ---
 
+[0.2.3]: https://github.com/686f6c61/alfred-dev/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/686f6c61/alfred-dev/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/686f6c61/alfred-dev/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/686f6c61/alfred-dev/compare/v0.1.5...v0.2.0

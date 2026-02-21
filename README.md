@@ -132,7 +132,7 @@ skills/
   documentación/     -- api-docs, architecture-docs, user-guide, changelog
 ```
 
-### Hooks (9)
+### Hooks (11)
 
 Los hooks interceptan eventos del ciclo de vida de Claude Code para aplicar validaciones automaticas:
 
@@ -147,6 +147,8 @@ Los hooks interceptan eventos del ciclo de vida de Claude Code para aplicar vali
 | `dependency-watch.py` | `PostToolUse` (Write/Edit) | Detecta dependencias nuevas y notifica al security officer |
 | `spelling-guard.py` | `PostToolUse` (Write/Edit) | Detecta palabras castellanas sin tilde al escribir o editar ficheros |
 | `memory-capture.py` | `PostToolUse` (Write/Edit) | Captura automatica de eventos en la memoria persistente del proyecto |
+| `commit-capture.py` | `PostToolUse` (Bash) | Auto-captura de commits en la memoria persistente |
+| `memory-compact.py` | `PreCompact` | Protege decisiones criticas durante la compactacion de contexto |
 
 ### Templates (7)
 
@@ -220,18 +222,20 @@ El hook `session-start.sh` analiza el directorio de trabajo al iniciar sesión y
 
 ## Memoria persistente
 
-A partir de v0.2.0, Alfred Dev puede recordar decisiones, commits e iteraciones entre sesiones. La memoria se almacena en una base de datos SQLite local (`.claude/alfred-memory.db`) dentro de cada proyecto, sin dependencias externas ni servicios remotos.
+A partir de v0.2.0, Alfred Dev puede recordar decisiones, commits e iteraciones entre sesiones. La memoria se almacena en una base de datos SQLite local (`.claude/alfred-memory.db`) dentro de cada proyecto, sin dependencias externas ni servicios remotos. La v0.2.3 anade etiquetas, estado y relaciones entre decisiones, auto-captura de commits, filtros avanzados de busqueda y exportacion/importacion.
 
-La activacion es opcional y se gestiona con `/alfred config`. Una vez activa, el sistema captura automaticamente eventos del flujo de trabajo (inicio y fin de iteraciones, cambios de fase) mediante un hook `PostToolUse`, mientras que las decisiones arquitectonicas se registran a traves del agente **El Bibliotecario** o del servidor MCP integrado.
+La activacion es opcional y se gestiona con `/alfred config`. Una vez activa, dos hooks complementarios capturan eventos automaticamente: `memory-capture.py` registra iteraciones y fases, y `commit-capture.py` detecta cada `git commit` y registra SHA, autor y ficheros afectados. Las decisiones arquitectonicas se registran a traves del agente **El Bibliotecario** o del servidor MCP integrado.
 
 Funcionalidades principales:
 
 - **Trazabilidad completa**: problema, decision, commit y validacion enlazados con IDs referenciables.
-- **Busqueda**: texto completo con FTS5 (cuando disponible) o fallback a LIKE.
-- **Servidor MCP**: 10 herramientas accesibles desde cualquier agente (buscar, registrar, consultar linea temporal, estadisticas, gestion de iteraciones).
-- **El Bibliotecario**: agente opcional que responde consultas historicas citando siempre las fuentes con formato `[D#id]`, `[C#sha]`, `[I#id]`.
-- **Contexto de sesion**: al iniciar una sesion, se inyectan automaticamente las ultimas 5 decisiones y la iteracion activa para dar continuidad al trabajo.
+- **Busqueda avanzada**: texto completo con FTS5, filtros temporales (`since`/`until`), por etiquetas y por estado (`active`/`superseded`/`deprecated`).
+- **Servidor MCP**: 15 herramientas accesibles desde cualquier agente (buscar, registrar, consultar, estadisticas, gestion de iteraciones, ciclo de vida de decisiones, validacion de integridad, export/import).
+- **El Bibliotecario**: agente opcional que responde consultas historicas citando siempre las fuentes con formato `[D#id]`, `[C#sha]`, `[I#id]`. Gestiona el ciclo de vida de decisiones y valida la integridad de la memoria.
+- **Contexto de sesion**: al iniciar, se inyectan las decisiones de la iteracion activa (o las 5 ultimas). Un hook PreCompact protege las decisiones criticas durante la compactacion.
+- **Export/Import**: exportar decisiones a Markdown (formato ADR), importar desde historial Git o ficheros ADR existentes.
 - **Seguridad**: sanitizacion de secretos con los mismos patrones que `secret-guard.sh`, permisos 0600 en el fichero de base de datos.
+- **Migracion automatica**: el esquema se actualiza automaticamente con backup previo al abrir bases de datos de versiones anteriores.
 
 ## Estructura del proyecto
 
@@ -245,7 +249,7 @@ alfred-dev/
   agents/optional/        # 7 agentes opcionales
   commands/               # 10 comandos /alfred
   skills/                 # 56 skills en 13 dominios
-  hooks/                  # 9 hooks del ciclo de vida
+  hooks/                  # 11 hooks del ciclo de vida
     hooks.json            # Configuracion de eventos
   core/                   # Motor de orquestacion y memoria (Python)
   mcp/                    # Servidor MCP stdio (memoria persistente)

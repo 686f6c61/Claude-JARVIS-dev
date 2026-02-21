@@ -62,9 +62,9 @@ Cada hook tiene un **timeout configurable** en segundos. Si el script no termina
 
 ---
 
-## Los 9 hooks de Alfred Dev
+## Los 11 hooks de Alfred Dev
 
-Alfred Dev registra nueve hooks que cubren los cuatro eventos del ciclo de vida: arranque de sesion, parada, antes de usar una herramienta y despues de usarla. Cada hook tiene una responsabilidad unica y esta disenado para fallar de forma segura: si algo va mal internamente, el hook sale con codigo 0 (sin bloquear) excepto en los casos donde la politica de seguridad exige fail-closed.
+Alfred Dev registra once hooks que cubren los cuatro eventos del ciclo de vida: arranque de sesion, parada, antes de usar una herramienta y despues de usarla. Cada hook tiene una responsabilidad unica y esta disenado para fallar de forma segura: si algo va mal internamente, el hook sale con codigo 0 (sin bloquear) excepto en los casos donde la politica de seguridad exige fail-closed.
 
 ### session-start.sh
 
@@ -240,6 +240,34 @@ El diseno de este hook es deliberadamente conservador: cualquier excepcion se ca
 
 ---
 
+### commit-capture.py
+
+**Evento:** `PostToolUse` -- **Matcher:** `Bash` -- **Timeout:** 10 s
+
+Este hook detecta automaticamente cuando Claude ejecuta un comando `git commit` a traves de Bash y registra los metadatos del commit en la memoria persistente. A diferencia de `memory-capture.py`, que captura eventos de flujo observando el fichero de estado, este hook captura commits observando los comandos de terminal.
+
+La deteccion se basa en una expresion regular (`(?:^|&&|\|\||;)\s*git\s+commit\b`) que reconoce el patron `git commit` tanto al inicio del comando como despues de operadores shell (`&&`, `||`, `;`). Esto cubre los casos habituales: `git commit -m "..."`, `git add . && git commit -m "..."` y variantes. La regex excluye correctamente falsos positivos como `grep git commit` o `echo git commit`.
+
+Antes de registrar, el hook verifica tres condiciones: que el comando contenga `git commit`, que el codigo de salida sea 0 (el commit se ejecuto con exito) y que la memoria este habilitada en la configuracion del proyecto. Si alguna condicion falla, sale silenciosamente.
+
+Cuando las tres condiciones se cumplen, ejecuta `git log -1 --format=%H|%s|%an|%aI --name-only` para extraer el SHA, mensaje, autor, fecha y ficheros afectados del commit recien creado. Registra estos datos en la memoria con `MemoryDB.log_commit()`, que es idempotente por SHA: si el commit ya existe en la base de datos, la operacion se ignora.
+
+La politica es **fail-open**: cualquier error se captura y el hook sale con codigo 0 sin bloquear el flujo.
+
+### memory-compact.py
+
+**Evento:** `PreCompact` -- **Matcher:** ninguno -- **Timeout:** 10 s
+
+Cuando Claude Code compacta el contexto de la conversacion para liberar espacio en la ventana, el contexto historico acumulado durante la sesion se pierde o se resume de forma generica. Este hook protege las decisiones criticas de la sesion inyectandolas como contexto adicional que sobrevive a la compactacion.
+
+El mecanismo funciona asi: al recibir el evento PreCompact, el hook consulta la memoria persistente para obtener las decisiones relevantes. Si hay una iteracion activa, obtiene las decisiones de esa iteracion; si no, obtiene las 5 ultimas decisiones globales. Con esa lista, genera un bloque de texto Markdown que resume cada decision (titulo, opcion elegida, fecha) y lo emite como JSON con la clave `hookSpecificOutput.PreCompact.additionalContext`.
+
+Claude Code incorpora este texto como contexto del sistema en la conversacion compactada, asegurando que las decisiones del proyecto no se pierdan aunque el contexto de conversacion se reduzca.
+
+La politica es **fail-open**: si la memoria no esta disponible, no hay decisiones o cualquier error ocurre, el hook sale con codigo 0 sin salida, y la compactacion procede normalmente sin contexto adicional.
+
+---
+
 ## Diagrama de interaccion
 
 El siguiente diagrama muestra como interactuan los hooks con Claude Code durante una sesion tipica. Los cuatro hooks representados cubren los cuatro eventos del ciclo de vida; los otros cinco (`stop-hook.py`, `dangerous-command-guard.py`, `sensitive-read-guard.py`, `dependency-watch.py` y `spelling-guard.py`) siguen patrones analogos a los representados.
@@ -309,6 +337,8 @@ sequenceDiagram
 | `PostToolUse` | `Write\|Edit` | `dependency-watch.py` | 10 s | No | No | Modificaciones en manifiestos de dependencias. Sugiere revision de seguridad de las dependencias anadidas. |
 | `PostToolUse` | `Write\|Edit` | `spelling-guard.py` | 10 s | No | No | Palabras castellanas sin tilde en ficheros de texto. Detecta ~80 errores comunes y avisa sin bloquear. |
 | `PostToolUse` | `Write\|Edit` | `memory-capture.py` | 10 s | No | No | Escrituras en `alfred-dev-state.json`. Registra eventos de iteracion en SQLite de forma completamente silenciosa. |
+| `PostToolUse` | `Bash` | `commit-capture.py` | 10 s | No | No | Comandos `git commit`. Registra automaticamente SHA, mensaje, autor y ficheros en la memoria persistente. |
+| `PreCompact` | _(ninguno)_ | `memory-compact.py` | 10 s | No | No | Compactacion de contexto. Inyecta decisiones criticas como contexto protegido para que sobrevivan a la compactacion. |
 
 ---
 
