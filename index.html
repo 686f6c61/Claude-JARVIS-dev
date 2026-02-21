@@ -1202,7 +1202,7 @@ footer a {
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
   "license": "https://opensource.org/licenses/MIT",
   "url": "https://686f6c61.github.io/alfred-dev/",
-  "softwareVersion": "0.2.1"
+  "softwareVersion": "0.2.2"
 }
 </script>
 </head>
@@ -1230,7 +1230,7 @@ footer a {
       <span></span>
       <span></span>
     </button>
-    <a href="https://github.com/686f6c61/alfred-dev/releases" class="nav-version" title="Ver historial de versiones" style="text-decoration: none;">v0.2.1</a>
+    <a href="https://github.com/686f6c61/alfred-dev/releases" class="nav-version" title="Ver historial de versiones" style="text-decoration: none;">v0.2.2</a>
   </div>
 </nav>
 
@@ -1887,7 +1887,7 @@ footer a {
     <div class="infra-grid">
 
       <div class="infra-card fade-in">
-        <h3>7 hooks</h3>
+        <h3>9 hooks</h3>
         <div class="infra-item">
           <span class="infra-item-name">session-start.sh</span>
           <span class="infra-item-tag">SessionStart</span>
@@ -1898,6 +1898,14 @@ footer a {
         </div>
         <div class="infra-item">
           <span class="infra-item-name">secret-guard.sh</span>
+          <span class="infra-item-tag">PreToolUse</span>
+        </div>
+        <div class="infra-item">
+          <span class="infra-item-name">dangerous-command-guard.py</span>
+          <span class="infra-item-tag">PreToolUse</span>
+        </div>
+        <div class="infra-item">
+          <span class="infra-item-name">sensitive-read-guard.py</span>
           <span class="infra-item-tag">PreToolUse</span>
         </div>
         <div class="infra-item">
@@ -2369,8 +2377,8 @@ footer a {
       <div class="fade-in" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 24px;">
         <h4 style="font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px;">Servidor MCP integrado</h4>
         <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7;">
-          6 herramientas accesibles desde cualquier agente via MCP stdio: buscar, registrar decisiones, registrar commits,
-          consultar iteraciones, linea temporal de eventos y estadisticas. Sin dependencias externas.
+          10 herramientas accesibles desde cualquier agente via MCP stdio: buscar, registrar decisiones, registrar commits,
+          consultar iteraciones, linea temporal de eventos, estadisticas, gestion de iteraciones y busqueda avanzada. Sin dependencias externas.
         </p>
       </div>
 
@@ -2860,7 +2868,7 @@ footer a {
 <footer>
   <div class="container">
     <p>
-      <strong style="color: var(--text);">Alfred Dev</strong> v0.2.1
+      <strong style="color: var(--text);">Alfred Dev</strong> v0.2.2
       <span style="margin: 0 8px; color: var(--border-light);">|</span>
       MIT License
       <span style="margin: 0 8px; color: var(--border-light);">|</span>
