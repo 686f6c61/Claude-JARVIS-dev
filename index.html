@@ -1190,6 +1190,161 @@ footer a {
   .stat-number { font-size: 28px; }
   .container { padding: 0 16px; }
 }
+/* ── Modal changelog ────────────────────────────── */
+.changelog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.changelog-overlay.open { opacity: 1; pointer-events: auto; }
+
+.changelog-modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.96);
+  width: min(720px, 92vw);
+  max-height: 80vh;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.changelog-modal.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.changelog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.changelog-header h2 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin: 0;
+}
+.changelog-header a {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+  margin-left: 12px;
+}
+.changelog-header a:hover { color: var(--blue); }
+.changelog-close {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.changelog-close:hover { border-color: var(--border-light); color: var(--text); }
+
+.changelog-body {
+  overflow-y: auto;
+  padding: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-light) transparent;
+}
+.changelog-body::-webkit-scrollbar { width: 6px; }
+.changelog-body::-webkit-scrollbar-track { background: transparent; }
+.changelog-body::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+.cl-version {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.cl-version:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+.cl-version-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.cl-version-tag {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--blue);
+}
+.cl-version-date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.cl-section-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 12px 0 8px;
+}
+.cl-section-title.added { color: var(--green); }
+.cl-section-title.changed { color: var(--orange); }
+.cl-section-title.fixed { color: var(--cyan); }
+
+.cl-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cl-list li {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+  padding-left: 16px;
+  position: relative;
+  margin-bottom: 4px;
+}
+.cl-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border-light);
+}
+.cl-list li strong { color: var(--text-bright); font-weight: 600; }
+.cl-list li code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--bg-card);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--blue);
+}
 </style>
 <script type="application/ld+json">
 {
@@ -1230,7 +1385,7 @@ footer a {
       <span></span>
       <span></span>
     </button>
-    <a href="https://github.com/686f6c61/alfred-dev/releases" class="nav-version" title="Ver historial de versiones" style="text-decoration: none;">v0.2.2</a>
+    <button class="nav-version" id="changelogBtn" title="Ver changelog" style="cursor: pointer;">v0.2.2</button>
   </div>
 </nav>
 
@@ -2864,6 +3019,142 @@ footer a {
   </div>
 </section>
 
+<!-- ─── Changelog modal ────────────────────────── -->
+<div class="changelog-overlay" id="changelogOverlay"></div>
+<div class="changelog-modal" id="changelogModal" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+  <div class="changelog-header">
+    <div style="display:flex;align-items:baseline;gap:10px;">
+      <h2 id="changelogTitle">Changelog</h2>
+      <a href="https://github.com/686f6c61/alfred-dev/blob/main/CHANGELOG.md" target="_blank" rel="noopener">ver completo</a>
+    </div>
+    <button class="changelog-close" id="changelogClose" aria-label="Cerrar changelog">&times;</button>
+  </div>
+  <div class="changelog-body">
+
+    <div class="cl-version">
+      <div class="cl-version-header">
+        <span class="cl-version-tag">0.2.2</span>
+        <span class="cl-version-date">2026-02-21</span>
+      </div>
+      <p class="cl-section-title added">Added</p>
+      <ul class="cl-list">
+        <li><strong>Hook dangerous-command-guard.py</strong> -- bloquea <code>rm -rf /</code>, force push, <code>DROP DATABASE</code>, fork bombs y mas.</li>
+        <li><strong>Hook sensitive-read-guard.py</strong> -- aviso al leer claves privadas, <code>.env</code>, credenciales.</li>
+        <li><strong>4 herramientas MCP nuevas</strong> -- total 10: stats, iteraciones, abandon.</li>
+        <li><strong>3 skills nuevos</strong> -- incident-response, release-planning, dependency-strategy.</li>
+        <li><code>/alfred feature</code> permite seleccionar fase de inicio.</li>
+        <li>Test de consistencia de version. 219 tests en total.</li>
+      </ul>
+      <p class="cl-section-title fixed">Fixed</p>
+      <ul class="cl-list">
+        <li><strong>quality-gate.py</strong> -- ancla de posicion para runners, <code>re.IGNORECASE</code> en fallos.</li>
+        <li>Respuestas MCP con <code>isError: true</code> para errores.</li>
+        <li>8 incidencias de deuda tecnica: logging, encapsulacion, recuperacion.</li>
+      </ul>
+    </div>
+
+    <div class="cl-version">
+      <div class="cl-version-header">
+        <span class="cl-version-tag">0.2.1</span>
+        <span class="cl-version-date">2026-02-21</span>
+      </div>
+      <p class="cl-section-title fixed">Fixed</p>
+      <ul class="cl-list">
+        <li><strong>Ruta de cache en Windows</strong> -- install.ps1 y uninstall.ps1 alineados con la convencion de Claude Code.</li>
+        <li><strong>memory-capture.py</strong> -- diagnostico en bloques except silenciosos.</li>
+        <li><strong>session-start.sh</strong> -- catches especificos en vez de Exception generico.</li>
+      </ul>
+    </div>
+
+    <div class="cl-version">
+      <div class="cl-version-header">
+        <span class="cl-version-tag">0.2.0</span>
+        <span class="cl-version-date">2026-02-20</span>
+      </div>
+      <p class="cl-section-title added">Added</p>
+      <ul class="cl-list">
+        <li><strong>Memoria persistente</strong> -- SQLite local por proyecto con decisiones, commits, iteraciones y eventos.</li>
+        <li><strong>Servidor MCP</strong> -- 6 herramientas stdio: buscar, registrar, consultar.</li>
+        <li><strong>El Bibliotecario</strong> -- agente opcional para consultas historicas.</li>
+        <li><strong>Hook memory-capture.py</strong> -- captura automatica de eventos del flujo.</li>
+        <li>Busqueda FTS5, sanitizacion de secretos, permisos 0600.</li>
+        <li>114 tests (58 nuevos para memoria).</li>
+      </ul>
+    </div>
+
+    <div class="cl-version">
+      <div class="cl-version-header">
+        <span class="cl-version-tag">0.1.5</span>
+        <span class="cl-version-date">2026-02-20</span>
+      </div>
+      <p class="cl-section-title fixed">Fixed</p>
+      <ul class="cl-list">
+        <li><strong>Secret-guard fail-closed</strong> -- bloquea cuando no puede determinar la ruta destino.</li>
+        <li>Instalador idempotente en entorno limpio (<code>mkdir -p</code>).</li>
+        <li>Deteccion de version en <code>/alfred update</code> mas fiable.</li>
+      </ul>
+    </div>
+
+    <div class="cl-version">
+      <div class="cl-version-header">
+        <span class="cl-version-tag">0.1.4</span>
+        <span class="cl-version-date">2026-02-19</span>
+      </div>
+      <p class="cl-section-title added">Added</p>
+      <ul class="cl-list">
+        <li><strong>6 agentes opcionales</strong> -- data-engineer, ux-reviewer, performance, github, seo, copywriter.</li>
+        <li><strong>27 skills nuevos</strong> en 6 dominios. Total: 56 skills en 13 dominios.</li>
+        <li><strong>Soporte Windows</strong> -- install.ps1 y uninstall.ps1 nativos.</li>
+        <li><strong>Hook spelling-guard.py</strong> -- tildes omitidas en castellano.</li>
+        <li>Quality gates ampliados: 8 a 18.</li>
+      </ul>
+    </div>
+
+    <div class="cl-version">
+      <div class="cl-version-header">
+        <span class="cl-version-tag">0.1.2</span>
+        <span class="cl-version-date">2026-02-18</span>
+      </div>
+      <p class="cl-section-title changed">Changed</p>
+      <ul class="cl-list">
+        <li><strong>Nueva personalidad</strong> -- companero cercano con humor, los 8 agentes con voz propia.</li>
+        <li>Correccion ortografica completa en 68 ficheros (RAE).</li>
+      </ul>
+      <p class="cl-section-title fixed">Fixed</p>
+      <ul class="cl-list">
+        <li>Prefijo correcto en comandos, update robusto, registro explicito de los 10 comandos.</li>
+      </ul>
+    </div>
+
+    <div class="cl-version">
+      <div class="cl-version-header">
+        <span class="cl-version-tag">0.1.1</span>
+        <span class="cl-version-date">2026-02-18</span>
+      </div>
+      <p class="cl-section-title fixed">Fixed</p>
+      <ul class="cl-list">
+        <li><strong>session-start.sh</strong> -- error de sintaxis que impedia la inyeccion de contexto.</li>
+        <li><strong>secret-guard.sh</strong> -- politica fail-closed restaurada.</li>
+        <li><strong>stop-hook.py</strong> -- validacion de tipos para estado corrupto.</li>
+      </ul>
+    </div>
+
+    <div class="cl-version">
+      <div class="cl-version-header">
+        <span class="cl-version-tag">0.1.0</span>
+        <span class="cl-version-date">2026-02-18</span>
+      </div>
+      <p class="cl-section-title added">Added</p>
+      <ul class="cl-list">
+        <li>Primera release publica.</li>
+        <li>8 agentes especializados, 5 flujos, 29 skills, 5 hooks.</li>
+        <li>Quality gates, compliance RGPD/NIS2/CRA, deteccion de stack.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
 <!-- ─── Footer ─────────────────────────────────── -->
 <footer>
   <div class="container">
@@ -2965,6 +3256,31 @@ document.querySelectorAll('.install-cmd, .uninstall-card code').forEach(el => {
   el.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doCopy(); }
   });
+});
+
+/* ── Changelog modal ── */
+const clBtn = document.getElementById('changelogBtn');
+const clOverlay = document.getElementById('changelogOverlay');
+const clModal = document.getElementById('changelogModal');
+const clClose = document.getElementById('changelogClose');
+
+function openChangelog() {
+  clOverlay.classList.add('open');
+  clModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  clClose.focus();
+}
+function closeChangelog() {
+  clOverlay.classList.remove('open');
+  clModal.classList.remove('open');
+  document.body.style.overflow = '';
+  clBtn.focus();
+}
+clBtn.addEventListener('click', openChangelog);
+clOverlay.addEventListener('click', closeChangelog);
+clClose.addEventListener('click', closeChangelog);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && clModal.classList.contains('open')) closeChangelog();
 });
 
 /* ── FAQ acordeon con ARIA ── */
