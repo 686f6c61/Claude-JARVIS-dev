@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""Tests para el hook dangerous-command-guard.py."""
+
+import importlib.util
+import os
+import unittest
+
+# Importar el hook usando importlib (el nombre tiene guion)
+_hook_path = os.path.join(
+    os.path.dirname(__file__), "..", "hooks", "dangerous-command-guard.py"
+)
+_spec = importlib.util.spec_from_file_location("dangerous_command_guard", _hook_path)
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+
+_DANGEROUS_PATTERNS = _mod._DANGEROUS_PATTERNS
+
+
+def _is_dangerous(command: str) -> bool:
+    """Comprueba si un comando seria bloqueado por el hook."""
+    for pattern, _description in _DANGEROUS_PATTERNS:
+        if pattern.search(command):
+            return True
+    return False
+
+
+class TestDangerousCommands(unittest.TestCase):
+    """Verifica que los comandos peligrosos se detectan correctamente."""
+
+    # --- Borrado catastrofico ---
+
+    def test_rm_rf_root(self):
+        self.assertTrue(_is_dangerous("rm -rf /"))
+
+    def test_rm_rf_root_wildcard(self):
+        self.assertTrue(_is_dangerous("rm -rf /*"))
+
+    def test_rm_rf_home(self):
+        self.assertTrue(_is_dangerous("rm -rf ~"))
+
+    def test_rm_rf_home_var(self):
+        self.assertTrue(_is_dangerous("rm -rf $HOME"))
+
+    def test_rm_rf_etc(self):
+        self.assertTrue(_is_dangerous("rm -rf /etc"))
+
+    def test_rm_rf_usr(self):
+        self.assertTrue(_is_dangerous("rm -rf /usr"))
+
+    def test_rm_fr_root(self):
+        """Verifica que -fr (orden inverso de flags) tambien se detecta."""
+        self.assertTrue(_is_dangerous("rm -fr /"))
+
+    def test_sudo_rm_rf_root(self):
+        """Verifica que sudo rm -rf / tambien se detecta."""
+        self.assertTrue(_is_dangerous("sudo rm -rf /"))
+
+    def test_rm_separated_flags(self):
+        """Verifica que flags separadas -r -f tambien se detectan."""
+        self.assertTrue(_is_dangerous("rm -r -f /"))
+
+    # --- Comandos seguros de rm ---
+
+    def test_rm_rf_node_modules(self):
+        self.assertFalse(_is_dangerous("rm -rf node_modules"))
+
+    def test_rm_rf_dist(self):
+        self.assertFalse(_is_dangerous("rm -rf dist/"))
+
+    def test_rm_rf_build(self):
+        self.assertFalse(_is_dangerous("rm -rf build/"))
+
+    def test_rm_single_file(self):
+        self.assertFalse(_is_dangerous("rm archivo.txt"))
+
+    # --- Force push ---
+
+    def test_git_push_force_main(self):
+        self.assertTrue(_is_dangerous("git push --force origin main"))
+
+    def test_git_push_f_master(self):
+        self.assertTrue(_is_dangerous("git push -f origin master"))
+
+    # --- Comandos git seguros ---
+
+    def test_git_push_normal(self):
+        self.assertFalse(_is_dangerous("git push origin feature/nueva"))
+
+    def test_git_push_u(self):
+        self.assertFalse(_is_dangerous("git push -u origin main"))
+
+    # --- SQL destructivo ---
+
+    def test_drop_database(self):
+        self.assertTrue(_is_dangerous("DROP DATABASE produccion"))
+
+    def test_drop_table(self):
+        self.assertTrue(_is_dangerous("DROP TABLE users"))
+
+    def test_drop_schema(self):
+        self.assertTrue(_is_dangerous("DROP SCHEMA public"))
+
+    def test_drop_case_insensitive(self):
+        self.assertTrue(_is_dangerous("drop database produccion"))
+
+    # --- Docker prune ---
+
+    def test_docker_system_prune_af(self):
+        self.assertTrue(_is_dangerous("docker system prune -af"))
+
+    def test_docker_system_prune_fa(self):
+        self.assertTrue(_is_dangerous("docker system prune -f -a"))
+
+    # --- Permisos inseguros ---
+
+    def test_chmod_777_root(self):
+        self.assertTrue(_is_dangerous("chmod 777 /"))
+
+    def test_chmod_R_777_root(self):
+        self.assertTrue(_is_dangerous("chmod -R 777 /var"))
+
+    # --- Fork bomb ---
+
+    def test_fork_bomb(self):
+        self.assertTrue(_is_dangerous(":(){ :|:& };:"))
+
+    # --- Formateo de disco ---
+
+    def test_mkfs_ext4(self):
+        self.assertTrue(_is_dangerous("mkfs.ext4 /dev/sda1"))
+
+    def test_dd_to_device(self):
+        self.assertTrue(_is_dangerous("dd if=/dev/zero of=/dev/sda"))
+
+    def test_dd_to_nvme(self):
+        self.assertTrue(_is_dangerous("dd if=/dev/zero of=/dev/nvme0n1"))
+
+    # --- Redireccion a dispositivo ---
+
+    def test_redirect_to_sda(self):
+        self.assertTrue(_is_dangerous("> /dev/sda"))
+
+    # --- git reset --hard ---
+
+    def test_git_reset_hard_origin_main(self):
+        self.assertTrue(_is_dangerous("git reset --hard origin/main"))
+
+    def test_git_reset_hard_origin_master(self):
+        self.assertTrue(_is_dangerous("git reset --hard origin/master"))
+
+    # --- Comandos seguros generales ---
+
+    def test_ls(self):
+        self.assertFalse(_is_dangerous("ls -la"))
+
+    def test_git_status(self):
+        self.assertFalse(_is_dangerous("git status"))
+
+    def test_npm_install(self):
+        self.assertFalse(_is_dangerous("npm install"))
+
+    def test_python_script(self):
+        self.assertFalse(_is_dangerous("python3 script.py"))
+
+    def test_docker_build(self):
+        self.assertFalse(_is_dangerous("docker build -t myapp ."))
+
+    def test_cat_file(self):
+        self.assertFalse(_is_dangerous("cat /etc/hosts"))
+
+
+if __name__ == "__main__":
+    unittest.main()

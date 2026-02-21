@@ -48,3 +48,18 @@ Activa el agente `devops-engineer` con revisión del security-officer. CI/CD, Do
 | "RGPD no aplica a este componente" | security-officer decide eso, no tú |
 
 Guarda el estado en `.claude/alfred-dev-state.json` al iniciar y después de cada fase.
+
+## Agentes opcionales
+
+Si el proyecto tiene agentes opcionales activados en `.claude/alfred-dev.local.md`, inclúyelos en las fases correspondientes:
+
+| Agente opcional | Fase | Modo |
+|----------------|------|------|
+| **data-engineer** | Arquitectura, Desarrollo | En paralelo con los de núcleo |
+| **ux-reviewer** | Producto, Calidad | En paralelo con los de núcleo |
+| **performance-engineer** | Calidad | En paralelo con los de núcleo |
+| **github-manager** | Entrega | Después del devops-engineer |
+| **seo-specialist** | Calidad | En paralelo con los de núcleo |
+| **copywriter** | Documentación | En paralelo con tech-writer |
+
+Comprueba en `.claude/alfred-dev.local.md` qué agentes opcionales están activos antes de cada fase. Si un agente opcional está activo y tiene integración en esa fase, lánzalo con Task usando su subagent_type registrado.

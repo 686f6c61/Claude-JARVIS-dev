@@ -227,6 +227,124 @@ _TOOLS: List[Dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "memory_manage_iteration",
+        "description": (
+            "Gestiona el ciclo de vida de iteraciones: inicia una nueva "
+            "o completa una existente. Util para que los agentes controlen "
+            "el flujo sin depender del hook de captura automatica."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["start", "complete"],
+                    "description": (
+                        "Accion a realizar: 'start' para iniciar una nueva "
+                        "iteracion, 'complete' para cerrar una existente."
+                    ),
+                },
+                "command": {
+                    "type": "string",
+                    "description": (
+                        "Comando que origino la iteracion (ej. 'feature', 'fix'). "
+                        "Solo requerido para action='start'."
+                    ),
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Descripcion libre de la iteracion.",
+                },
+                "iteration_id": {
+                    "type": "integer",
+                    "description": (
+                        "ID de la iteracion a completar. Solo para action='complete'. "
+                        "Si se omite, se completa la iteracion activa."
+                    ),
+                },
+            },
+            "required": ["action"],
+        },
+    },
+    {
+        "name": "memory_log_event",
+        "description": (
+            "Registra un evento arbitrario en la cronologia de una iteracion. "
+            "Util para trazar gates aprobadas, agentes ejecutados o hitos "
+            "personalizados del flujo."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "event_type": {
+                    "type": "string",
+                    "description": (
+                        "Tipo de evento (ej. 'gate_approved', 'agent_executed', "
+                        "'phase_completed', 'custom')."
+                    ),
+                },
+                "phase": {
+                    "type": "string",
+                    "description": "Fase del flujo en la que ocurrio el evento.",
+                },
+                "payload": {
+                    "type": "object",
+                    "description": "Datos arbitrarios asociados al evento.",
+                },
+                "iteration_id": {
+                    "type": "integer",
+                    "description": (
+                        "ID de la iteracion. Si se omite, se usa la activa."
+                    ),
+                },
+            },
+            "required": ["event_type"],
+        },
+    },
+    {
+        "name": "memory_get_decisions",
+        "description": (
+            "Lista las decisiones de diseno registradas en la memoria. "
+            "Se pueden filtrar por iteracion. Util para el Bibliotecario "
+            "y para generar informes de decisiones."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "iteration_id": {
+                    "type": "integer",
+                    "description": "Filtrar decisiones por ID de iteracion.",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Numero maximo de decisiones (por defecto 50).",
+                    "default": 50,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "memory_purge",
+        "description": (
+            "Elimina eventos antiguos de la memoria. Las decisiones e "
+            "iteraciones se conservan siempre; solo se purgan eventos "
+            "anteriores a la ventana de retencion indicada."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "retention_days": {
+                    "type": "integer",
+                    "description": (
+                        "Dias de retencion. Los eventos mas antiguos se eliminan."
+                    ),
+                },
+            },
+            "required": ["retention_days"],
+        },
+    },
 ]
 
 # Mapa de nombre a indice para acceso rapido en tools/call
@@ -527,10 +645,15 @@ class MemoryMCPServer:
         try:
             result = handler(db, arguments)
             text_content = json.dumps(result, ensure_ascii=False, indent=2)
+            # Si el handler devuelve {"error": ...}, marcamos isError para
+            # que el consumidor MCP distinga errores de validacion de
+            # resultados exitosos (protocolo MCP tools/call).
+            is_error = isinstance(result, dict) and "error" in result
             return _make_response(request_id, {
                 "content": [
                     {"type": "text", "text": text_content},
                 ],
+                "isError": is_error,
             })
         except Exception as exc:
             _log.error(
@@ -723,7 +846,8 @@ class MemoryMCPServer:
         Obtiene la iteracion mas reciente de la base de datos.
 
         Se usa como fallback cuando no hay iteracion activa y el usuario
-        no especifica un ID concreto.
+        no especifica un ID concreto. Delega en el metodo publico de
+        MemoryDB para mantener la encapsulacion.
 
         Args:
             db: instancia de MemoryDB abierta.
@@ -731,12 +855,7 @@ class MemoryMCPServer:
         Returns:
             Diccionario con la iteracion mas reciente, o None si no hay ninguna.
         """
-        # Acceso directo a la conexion para una consulta que MemoryDB
-        # no expone directamente como metodo publico
-        row = db._conn.execute(
-            "SELECT * FROM iterations ORDER BY id DESC LIMIT 1"
-        ).fetchone()
-        return dict(row) if row else None
+        return db.get_latest_iteration()
 
     def _call_memory_get_timeline(
         self, db: MemoryDB, args: Dict[str, Any]
@@ -787,6 +906,180 @@ class MemoryMCPServer:
         stats["fts_enabled"] = db.fts_enabled
         stats["db_path"] = self._db_path
         return stats
+
+    def _call_memory_manage_iteration(
+        self, db: MemoryDB, args: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Gestiona el ciclo de vida de iteraciones.
+
+        Soporta dos acciones: ``start`` para iniciar una nueva iteracion
+        y ``complete`` para cerrar una existente. Si se intenta iniciar
+        una iteracion cuando ya hay una activa, se devuelve un error.
+
+        Args:
+            db: instancia de MemoryDB abierta.
+            args: ``action`` (str, obligatorio), ``command`` (str),
+                  ``description`` (str), ``iteration_id`` (int).
+
+        Returns:
+            Diccionario con el resultado de la operacion.
+        """
+        action: str = args.get("action", "")
+
+        if action == "start":
+            command: str = args.get("command", "")
+            if not command:
+                return {"error": "El campo 'command' es obligatorio para action='start'."}
+
+            # Verificar que no hay iteracion activa
+            active = db.get_active_iteration()
+            if active is not None:
+                return {
+                    "error": (
+                        f"Ya hay una iteracion activa (ID {active['id']}, "
+                        f"comando '{active.get('command', '?')}'). "
+                        f"Completala antes de iniciar una nueva."
+                    ),
+                    "active_iteration": active,
+                }
+
+            iteration_id = db.start_iteration(
+                command=command,
+                description=args.get("description"),
+            )
+            return {
+                "iteration_id": iteration_id,
+                "message": f"Iteracion {iteration_id} iniciada para '{command}'.",
+            }
+
+        elif action == "complete":
+            iteration_id_param: Optional[int] = args.get("iteration_id")
+
+            if iteration_id_param is None:
+                active = db.get_active_iteration()
+                if active is None:
+                    return {"error": "No hay iteracion activa para completar."}
+                iteration_id_param = active["id"]
+
+            db.complete_iteration(iteration_id_param)
+            return {
+                "iteration_id": iteration_id_param,
+                "message": f"Iteracion {iteration_id_param} completada.",
+            }
+
+        else:
+            return {"error": f"Accion desconocida: '{action}'. Usa 'start' o 'complete'."}
+
+    def _call_memory_log_event(
+        self, db: MemoryDB, args: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Registra un evento arbitrario en la cronologia de una iteracion.
+
+        Los eventos se vinculan a una iteracion. Si no se proporciona
+        ``iteration_id``, se usa la iteracion activa. Si no hay activa,
+        se devuelve un error.
+
+        Args:
+            db: instancia de MemoryDB abierta.
+            args: ``event_type`` (str, obligatorio), ``phase`` (str),
+                  ``payload`` (dict), ``iteration_id`` (int).
+
+        Returns:
+            Diccionario con el ID del evento registrado.
+        """
+        event_type: str = args.get("event_type", "")
+        if not event_type:
+            return {"error": "El campo 'event_type' es obligatorio."}
+
+        iteration_id: Optional[int] = args.get("iteration_id")
+        if iteration_id is None:
+            active = db.get_active_iteration()
+            if active is None:
+                return {
+                    "error": (
+                        "No hay iteracion activa. Proporciona 'iteration_id' "
+                        "o inicia una iteracion con memory_manage_iteration."
+                    ),
+                }
+            iteration_id = active["id"]
+
+        event_id = db.log_event(
+            event_type=event_type,
+            phase=args.get("phase"),
+            payload=args.get("payload"),
+            iteration_id=iteration_id,
+        )
+
+        return {
+            "event_id": event_id,
+            "iteration_id": iteration_id,
+            "message": f"Evento '{event_type}' registrado con ID {event_id}.",
+        }
+
+    def _call_memory_get_decisions(
+        self, db: MemoryDB, args: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Lista las decisiones de diseno registradas en la memoria.
+
+        Las decisiones se devuelven ordenadas de la mas reciente a la
+        mas antigua. Se pueden filtrar por iteracion.
+
+        Args:
+            db: instancia de MemoryDB abierta.
+            args: ``iteration_id`` (int, opcional), ``limit`` (int).
+
+        Returns:
+            Diccionario con la lista de decisiones y metadatos.
+        """
+        iteration_id: Optional[int] = args.get("iteration_id")
+        limit: int = args.get("limit", 50)
+
+        decisions = db.get_decisions(iteration_id=iteration_id, limit=limit)
+
+        return {
+            "decisions": decisions,
+            "total": len(decisions),
+            "iteration_id": iteration_id,
+        }
+
+    def _call_memory_purge(
+        self, db: MemoryDB, args: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Elimina eventos antiguos de la memoria.
+
+        Solo se purgan eventos: las decisiones e iteraciones se conservan
+        siempre. El numero de dias de retencion determina el corte temporal.
+
+        Args:
+            db: instancia de MemoryDB abierta.
+            args: ``retention_days`` (int, obligatorio).
+
+        Returns:
+            Diccionario con el numero de eventos eliminados.
+        """
+        retention_days: Optional[int] = args.get("retention_days")
+
+        if retention_days is None or retention_days < 1:
+            return {
+                "error": (
+                    "El campo 'retention_days' es obligatorio y debe ser "
+                    "un entero positivo."
+                ),
+            }
+
+        purged = db.purge_old_events(retention_days)
+        return {
+            "purged_events": purged,
+            "retention_days": retention_days,
+            "message": (
+                f"Eliminados {purged} eventos con mas de "
+                f"{retention_days} dias de antigueedad."
+            ),
+        }
 
     # --- Bucle principal ---------------------------------------------------
 

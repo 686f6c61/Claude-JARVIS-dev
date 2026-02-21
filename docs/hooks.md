@@ -62,9 +62,9 @@ Cada hook tiene un **timeout configurable** en segundos. Si el script no termina
 
 ---
 
-## Los 7 hooks de Alfred Dev
+## Los 9 hooks de Alfred Dev
 
-Alfred Dev registra siete hooks que cubren los cuatro eventos del ciclo de vida: arranque de sesion, parada, antes de usar una herramienta y despues de usarla. Cada hook tiene una responsabilidad unica y esta disenado para fallar de forma segura: si algo va mal internamente, el hook sale con codigo 0 (sin bloquear) excepto en los casos donde la politica de seguridad exige fail-closed.
+Alfred Dev registra nueve hooks que cubren los cuatro eventos del ciclo de vida: arranque de sesion, parada, antes de usar una herramienta y despues de usarla. Cada hook tiene una responsabilidad unica y esta disenado para fallar de forma segura: si algo va mal internamente, el hook sale con codigo 0 (sin bloquear) excepto en los casos donde la politica de seguridad exige fail-closed.
 
 ### session-start.sh
 
@@ -82,7 +82,7 @@ El script recorre cinco fuentes de informacion, cada una opcional y con fallo si
 
 4. **Memoria persistente.** Si existe `.claude/alfred-memory.db`, consulta la base de datos SQLite a traves del modulo `core.memory` para obtener las ultimas cinco decisiones registradas y la iteracion activa, si la hay. Esto proporciona contexto historico sin necesidad de releer toda la conversacion anterior.
 
-5. **Comprobacion de actualizaciones.** Consulta la API de GitHub (`https://api.github.com/repos/686f6c61/alfred-dev/releases/latest`) con un timeout de 3 segundos. Si hay una version nueva con formato semantico valido distinta de la actual (`0.2.1`), anade un aviso al contexto. La validacion del formato de version (`^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$`) evita inyeccion de contenido arbitrario desde la respuesta de la API.
+5. **Comprobacion de actualizaciones.** Consulta la API de GitHub (`https://api.github.com/repos/686f6c61/alfred-dev/releases/latest`) con un timeout de 3 segundos. Si hay una version nueva con formato semantico valido distinta de la actual, anade un aviso al contexto. La validacion del formato de version (`^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$`) evita inyeccion de contenido arbitrario desde la respuesta de la API.
 
 La salida es un JSON con la clave `hookSpecificOutput.additionalContext` que Claude Code inyecta como contexto del sistema. Para generar JSON seguro, el contenido se escapa a traves de `python3 -c "import json..."` en lugar de hacerlo con manipulacion de cadenas en bash, lo que evita problemas con caracteres especiales.
 
@@ -132,6 +132,45 @@ Los ficheros `.env` se excluyen del analisis porque son el lugar legitimo para g
 
 Cuando el hook bloquea, emite un mensaje en la voz de "El Paranoico" que explica que patron se detecto, por que no se debe hardcodear secretos y donde deberian ir (fichero `.env`, variables de entorno, gestor de secretos).
 
+### dangerous-command-guard.py
+
+**Evento:** `PreToolUse` -- **Matcher:** `Bash` -- **Timeout:** 5 s
+
+Este hook actua como segunda linea de defensa contra comandos destructivos. Se ejecuta antes de cada invocacion de Bash, analiza el comando y lo bloquea (exit 2) si coincide con un patron potencialmente catastrofico.
+
+A diferencia de `secret-guard.sh`, la politica de este hook es **fail-open**: si no puede parsear la entrada, permite la operacion y emite un aviso por stderr. La razon es que la proteccion contra comandos destructivos es una capa adicional, no el unico mecanismo de seguridad del sistema.
+
+El hook vigila 10 familias de patrones peligrosos:
+
+| Patron | Descripcion |
+|--------|-------------|
+| `rm -rf /` (o `~`, `$HOME`, `/usr`, etc.) | Borrado catastrofico del sistema, home o directorios de sistema. Cubre flags juntas (`-rf`), separadas (`-r -f`) y con `sudo`. |
+| `git push --force main/master` | Force push a rama protegida con riesgo de perdida de historial. |
+| `git push --force` (sin rama) | Force push sin rama explicita: avisa de que puede afectar a main/master. |
+| `DROP DATABASE/TABLE/SCHEMA` | Destruccion de datos en base de datos (case-insensitive). |
+| `docker system prune -af` | Eliminacion de todos los datos de contenedores, volumenes e imagenes. |
+| `chmod -R 777 /` | Permisos inseguros sobre directorio raiz. |
+| `:(){ :\|:& };:` | Fork bomb: denegacion de servicio local. |
+| `mkfs.* /dev/*` | Formateo de disco sobre dispositivo de bloque. |
+| `dd of=/dev/sd*` | Escritura directa a dispositivo de bloque con dd. |
+| `git reset --hard origin/main` | Descarta todos los cambios locales contra la rama remota. |
+
+El mensaje de bloqueo incluye el comando truncado (200 caracteres), la descripcion del riesgo y la sugerencia de ejecutar el comando manualmente si es realmente necesario.
+
+### sensitive-read-guard.py
+
+**Evento:** `PreToolUse` -- **Matcher:** `Read` -- **Timeout:** 5 s
+
+Este hook emite un aviso informativo cuando Claude intenta leer un fichero que puede contener credenciales o claves privadas. A diferencia de los otros hooks de seguridad, no bloquea la operacion: su proposito es alertar al agente para que tenga cuidado de no filtrar el contenido en respuestas, commits o artefactos generados.
+
+El hook reconoce dos tipos de patrones:
+
+**Por nombre base del fichero:** variables de entorno (`.env`, `.env.*`), claves privadas (`.pem`, `.key`, `.p12`, `.pfx`), claves SSH (`id_rsa`, `id_ed25519`, `id_ecdsa`), credenciales de servicios (`credentials.json`, `service-account.json`, `.npmrc`, `.pypirc`), ficheros de contrasenas (`.htpasswd`) y almacenes de claves Java (`.jks`, `.keystore`).
+
+**Por ruta completa:** credenciales AWS (`.aws/credentials`, `.aws/config`), directorio SSH (`.ssh/`) y directorio GPG (`.gnupg/`).
+
+La politica es estrictamente informativa: siempre sale con exit 0. Si no puede parsear la entrada, sale silenciosamente sin avisar.
+
 ### quality-gate.py
 
 **Evento:** `PostToolUse` -- **Matcher:** `Bash` -- **Timeout:** 10 s
@@ -142,7 +181,7 @@ El hook opera en dos fases. Primero determina si el comando ejecutado correspond
 
 `pytest`, `vitest`, `jest`, `mocha`, `cargo test`, `go test`, `npm test`, `pnpm test`, `bun test`, `yarn test`, `python -m unittest`, `phpunit`, `rspec`, `mix test`, `dotnet test`, `maven test` / `mvn test` y `gradle test`.
 
-Los patrones usan limites de palabra (`\b`) para evitar falsos positivos: un comando como `cat pytest.ini` no activa el hook porque `pytest` no aparece como palabra independiente en ese contexto.
+Los runners de una sola palabra (`pytest`, `jest`, `vitest`, `mocha`, etc.) usan un ancla de posicion de comando (`(?:^|[;&|])\s*`) que exige que el runner aparezca al inicio de la cadena o tras un operador shell, lo que evita falsos positivos como `cat pytest.ini` o `grep jest config.js`. Los runners de varias palabras (`cargo test`, `npm test`, etc.) usan limites de palabra (`\b`) porque su prefijo los ancla de forma natural.
 
 Si el comando es un runner de tests, la segunda fase analiza tanto stdout como stderr del resultado buscando 12 patrones de fallo: `FAIL`, `FAILED`, `ERROR`, `failures`, `failing`, `Tests failed`, `ERRORS:`, `AssertionError`, `test result: FAILED`, `Build FAILED`, `N failed` y `not ok`.
 
@@ -203,7 +242,7 @@ El diseno de este hook es deliberadamente conservador: cualquier excepcion se ca
 
 ## Diagrama de interaccion
 
-El siguiente diagrama muestra como interactuan los hooks con Claude Code durante una sesion tipica. Los cuatro hooks representados cubren los cuatro eventos del ciclo de vida; los otros tres (`stop-hook.py`, `dependency-watch.py` y `spelling-guard.py`) siguen patrones analogos a los representados.
+El siguiente diagrama muestra como interactuan los hooks con Claude Code durante una sesion tipica. Los cuatro hooks representados cubren los cuatro eventos del ciclo de vida; los otros cinco (`stop-hook.py`, `dangerous-command-guard.py`, `sensitive-read-guard.py`, `dependency-watch.py` y `spelling-guard.py`) siguen patrones analogos a los representados.
 
 ```mermaid
 sequenceDiagram
@@ -264,6 +303,8 @@ sequenceDiagram
 | `SessionStart` | `startup\|resume\|clear\|compact` | `session-start.sh` | -- | Si | No | Inyeccion de contexto al arrancar: presentacion, configuracion, estado de sesion, memoria y actualizaciones. |
 | `Stop` | _(ninguno)_ | `stop-hook.py` | 15 s | No | Si | Sesiones activas con gates pendientes. Impide cerrar Claude Code con trabajo sin terminar. |
 | `PreToolUse` | `Write\|Edit` | `secret-guard.sh` | 5 s | No | Si | Secretos en el contenido de ficheros: claves API, tokens, credenciales hardcodeadas, connection strings, webhooks. |
+| `PreToolUse` | `Bash` | `dangerous-command-guard.py` | 5 s | No | Si | Comandos destructivos: rm -rf /, force push, DROP DATABASE, docker prune, fork bombs, escritura a dispositivos. |
+| `PreToolUse` | `Read` | `sensitive-read-guard.py` | 5 s | No | No | Lectura de ficheros sensibles: claves privadas, .env, credenciales. Avisa sin bloquear. |
 | `PostToolUse` | `Bash` | `quality-gate.py` | 10 s | No | No | Resultado de ejecuciones de tests. Detecta fallos en 17 runners de tests y avisa sin bloquear. |
 | `PostToolUse` | `Write\|Edit` | `dependency-watch.py` | 10 s | No | No | Modificaciones en manifiestos de dependencias. Sugiere revision de seguridad de las dependencias anadidas. |
 | `PostToolUse` | `Write\|Edit` | `spelling-guard.py` | 10 s | No | No | Palabras castellanas sin tilde en ficheros de texto. Detecta ~80 errores comunes y avisa sin bloquear. |

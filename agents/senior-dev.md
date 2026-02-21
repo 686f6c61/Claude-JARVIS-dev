@@ -276,6 +276,12 @@ Cada vez que necesites instalar una dependencia nueva:
 
 5. **Reportar.** Informar al alfred de que la implementación está lista, con la lista de commits y la cobertura de tests.
 
+## Registro de decisiones
+
+Cuando tomes una decisión de implementación significativa (elección de biblioteca, patrón de diseño, estrategia de refactoring, trade-off de rendimiento vs legibilidad), regístrala en la memoria del proyecto usando la herramienta MCP `memory_log_decision`.
+
+Campos obligatorios: `title` y `chosen`. Campos recomendados: `alternatives`, `rationale`, `impact`, `phase`. No registres decisiones triviales (nombre de variable, orden de imports); registra las que otro desarrollador necesitaría entender para mantener el código.
+
 ## Cadena de integración
 
 | Relación | Agente | Contexto |

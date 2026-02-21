@@ -685,7 +685,11 @@ def _has_git_remote(project_dir):
     try:
         with open(git_config, "r", encoding="utf-8") as f:
             return '[remote "' in f.read()
-    except (OSError, IOError):
+    except (OSError, IOError) as e:
+        print(
+            f"[Alfred Dev] Aviso: no se pudo leer .git/config: {e}",
+            file=sys.stderr,
+        )
         return False
 
 
@@ -740,6 +744,7 @@ def _count_source_files(project_dir):
         ".venv", "venv", "vendor", "target", ".cargo",
     }
     count = 0
+    scan_errors = []
     try:
         for entry in os.scandir(project_dir):
             if entry.is_file() and os.path.splitext(entry.name)[1] in source_extensions:
@@ -754,13 +759,43 @@ def _count_source_files(project_dir):
                                 for deep in os.scandir(sub.path):
                                     if deep.is_file() and os.path.splitext(deep.name)[1] in source_extensions:
                                         count += 1
-                            except (OSError, PermissionError):
-                                pass
-                except (OSError, PermissionError):
-                    pass
-    except (OSError, PermissionError):
-        pass
+                            except (OSError, PermissionError) as e:
+                                scan_errors.append(str(e))
+                except (OSError, PermissionError) as e:
+                    scan_errors.append(str(e))
+    except (OSError, PermissionError) as e:
+        scan_errors.append(str(e))
+    if scan_errors:
+        print(
+            f"[Alfred Dev] Aviso: no se pudieron escanear {len(scan_errors)} "
+            f"directorios. El conteo de ficheros puede ser parcial.",
+            file=sys.stderr,
+        )
     return count
+
+
+def _is_memory_enabled(project_dir):
+    """Comprueba si la memoria persistente está habilitada en la configuración local.
+
+    Busca el fichero ``alfred-dev.local.md`` en el directorio ``.claude``
+    del proyecto y verifica que contenga la sección ``memoria:`` con
+    ``enabled: true``. El patrón es el mismo que usa ``hooks/memory-capture.py``.
+
+    Args:
+        project_dir: ruta al directorio raíz del proyecto.
+
+    Returns:
+        True si la memoria está habilitada, False en caso contrario.
+    """
+    config_path = os.path.join(project_dir, ".claude", "alfred-dev.local.md")
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except (OSError, FileNotFoundError):
+        return False
+
+    pattern = r"memoria:\s*\n(?:\s*#[^\n]*\n|\s*\w+:[^\n]*\n)*?\s*enabled:\s*true"
+    return bool(re.search(pattern, content))
 
 
 def suggest_optional_agents(project_dir, current_config=None):
@@ -835,6 +870,13 @@ def suggest_optional_agents(project_dir, current_config=None):
         suggestions.append((
             "performance-engineer",
             "Proyecto con más de 50 ficheros fuente: ayuda con profiling, benchmarks y optimización"
+        ))
+
+    # Memoria activa → librarian
+    if not active.get("librarian") and _is_memory_enabled(project_dir):
+        suggestions.append((
+            "librarian",
+            "Memoria persistente activa: consulta decisiones, historial y cronología del proyecto"
         ))
 
     return suggestions

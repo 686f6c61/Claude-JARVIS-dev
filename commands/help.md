@@ -20,7 +20,7 @@ Muestra al usuario la siguiente tabla de comandos disponibles con descripción y
 
 Además, al escribir `/alfred-dev:alfred` sin subcomando, Alfred actúa como asistente contextual: evalúa el estado del proyecto y la sesión, y dirige al usuario al flujo más adecuado.
 
-Explica brevemente que Alfred Dev es un equipo de **8 agentes de núcleo** (siempre activos) más **6 agentes opcionales** (activables según el proyecto) que cubren el ciclo completo de ingeniería de software, con quality gates y flujos automatizados.
+Explica brevemente que Alfred Dev es un equipo de **8 agentes de núcleo** (siempre activos) más **7 agentes opcionales** (activables según el proyecto) que cubren el ciclo completo de ingeniería de software, con quality gates y flujos automatizados.
 
 ### Agentes de núcleo
 
@@ -38,3 +38,4 @@ Se activan con `/alfred-dev:config`. Alfred los sugiere automáticamente al anal
 | **github-manager** | Cualquier proyecto con repositorio GitHub |
 | **seo-specialist** | Proyectos web con contenido público |
 | **copywriter** | Proyectos con textos públicos |
+| **librarian** | Proyectos con memoria persistente activa |

@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+"""
+Hook PreToolUse para Bash: guardia de comandos peligrosos.
+
+Intercepta las ejecuciones de Bash y analiza el comando en busca de patrones
+potencialmente destructivos (borrado catastrofico, force push, destruccion de
+datos, fork bombs, etc.). Si detecta un patron peligroso, bloquea la operacion
+(exit 2) con un aviso explicativo.
+
+Politica de seguridad: fail-open. Si no se puede parsear la entrada del hook
+o se produce cualquier error inesperado, se permite la operacion (exit 0).
+La razon es que un fallo en el hook no debe paralizar el flujo de trabajo;
+la proteccion contra comandos destructivos es una capa de defensa adicional,
+no el unico mecanismo de seguridad.
+
+Patrones vigilados:
+    - rm -rf / (o ~, o $HOME): borrado catastrofico del sistema o del home.
+    - git push --force a main/master: perdida de historial en ramas protegidas.
+    - DROP DATABASE / DROP TABLE: destruccion de datos en base de datos.
+    - docker system prune -af: eliminacion de volumenes y datos de contenedores.
+    - chmod -R 777: permisos inseguros en todo un arbol de directorios.
+    - fork bombs: denegacion de servicio local.
+    - mkfs / dd sobre dispositivos: destruccion de disco.
+    - Escritura directa a dispositivos de bloque.
+"""
+
+import json
+import re
+import sys
+
+
+# --- Patrones peligrosos ---------------------------------------------------
+# Cada tupla contiene (patron_compilado, descripcion_del_riesgo).
+# Los patrones se evaluan en orden; la primera coincidencia bloquea.
+
+_DANGEROUS_PATTERNS = [
+    # Borrado catastrofico: rm -rf aplicado a raiz, home o rutas de sistema.
+    # Cubre: flags juntas (-rf, -fr), separadas (-r -f), con sudo, y flags largas.
+    (
+        re.compile(
+            r"(?:sudo\s+)?rm\s+"
+            r"(?:-[a-zA-Z]*\s+)*"
+            r"(?:--\w[\w-]*\s+)*"
+            r"(?=-[a-zA-Z]*r)(?=.*-[a-zA-Z]*f)"
+            r".*\s+(/\s|/\*|/$|~\s|~$|~\/|\$HOME|\$\{HOME\}|/usr|/etc|/var|/boot|/System)"
+        ),
+        "Borrado catastrofico: rm -rf sobre directorio raiz o de sistema",
+    ),
+    # Force push a ramas protegidas
+    (
+        re.compile(
+            r"git\s+push\s+.*"
+            r"(--force\b|-f\b)"
+            r".*\b(main|master)\b"
+        ),
+        "Force push a rama protegida (main/master): riesgo de perdida de historial",
+    ),
+    # Variante: force push sin rama explicita (se asume rama actual)
+    (
+        re.compile(
+            r"git\s+push\s+--force-with-lease\s*$"
+            r"|git\s+push\s+-f\s*$"
+            r"|git\s+push\s+--force\s*$"
+        ),
+        "Force push sin rama explicita: verifica que no estas en main/master",
+    ),
+    # Destruccion de base de datos
+    (
+        re.compile(r"DROP\s+(DATABASE|TABLE|SCHEMA)\s", re.IGNORECASE),
+        "Destruccion de datos: DROP DATABASE/TABLE/SCHEMA",
+    ),
+    # Docker prune agresivo (cubre -af, -fa, -a -f, -f -a y combinaciones con otros flags)
+    (
+        re.compile(
+            r"docker\s+system\s+prune\s+.*(-af|-fa)\b"
+            r"|docker\s+system\s+prune\s+.*-a\b.*-f\b"
+            r"|docker\s+system\s+prune\s+.*-f\b.*-a\b"
+        ),
+        "Docker system prune con -af: elimina todos los datos de contenedores",
+    ),
+    # Permisos inseguros
+    (
+        re.compile(r"chmod\s+(-R\s+)?777\s+/"),
+        "Permisos inseguros: chmod 777 recursivo sobre directorio raiz",
+    ),
+    # Fork bomb (variantes comunes en bash)
+    (
+        re.compile(r":\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;?\s*:"),
+        "Fork bomb: denegacion de servicio local",
+    ),
+    # Formateo de disco
+    (
+        re.compile(r"mkfs\.\w+\s+/dev/"),
+        "Formateo de disco: mkfs sobre dispositivo de bloque",
+    ),
+    # dd sobre dispositivo de bloque
+    (
+        re.compile(r"dd\s+.*of=/dev/(sd|hd|nvme|vd|xvd)"),
+        "Escritura directa a dispositivo de bloque con dd",
+    ),
+    # Escritura a dispositivo via redireccion
+    (
+        re.compile(r">\s*/dev/(sd|hd|nvme|vd|xvd)"),
+        "Redireccion de salida a dispositivo de bloque",
+    ),
+    # git reset --hard a remote (destructivo en combinacion con push)
+    (
+        re.compile(r"git\s+reset\s+--hard\s+origin/(main|master)"),
+        "git reset --hard a origin/main: descarta todos los cambios locales",
+    ),
+]
+
+
+def main():
+    """Punto de entrada del hook.
+
+    Lee el JSON de stdin proporcionado por PreToolUse, extrae el comando
+    de ``tool_input.command`` y lo compara contra la lista de patrones
+    peligrosos. Si alguno coincide, bloquea la operacion con exit 2.
+    """
+    try:
+        data = json.load(sys.stdin)
+    except (ValueError, json.JSONDecodeError) as e:
+        # Fail-open: si no podemos parsear, permitir la operacion pero avisar
+        print(
+            f"[Alfred Dev] Aviso: no se pudo parsear la entrada del hook: {e}. "
+            f"La guardia de comandos peligrosos esta desactivada para esta invocacion.",
+            file=sys.stderr,
+        )
+        sys.exit(0)
+
+    tool_input = data.get("tool_input", {})
+    command = tool_input.get("command", "")
+
+    if not command:
+        sys.exit(0)
+
+    # Comprobar cada patron contra el comando
+    for pattern, description in _DANGEROUS_PATTERNS:
+        if pattern.search(command):
+            # Bloquear con aviso explicativo
+            print(
+                f"\n[Alfred Dev] COMANDO PELIGROSO BLOQUEADO\n\n"
+                f"  Comando:  {command[:200]}\n"
+                f"  Riesgo:   {description}\n\n"
+                f"  Si realmente necesitas ejecutar este comando, pidele\n"
+                f"  al usuario que lo ejecute manualmente en su terminal.\n",
+                file=sys.stderr,
+            )
+            # Emitir JSON de bloqueo por stdout para Claude Code
+            json.dump(
+                {
+                    "decision": "block",
+                    "reason": f"Comando potencialmente destructivo: {description}",
+                },
+                sys.stdout,
+            )
+            sys.exit(2)
+
+    # Comando seguro, permitir
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

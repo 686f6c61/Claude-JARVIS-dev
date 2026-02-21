@@ -258,6 +258,94 @@ FLOWS: Dict[str, Dict[str, Any]] = {
 }
 
 
+# --- Integracion de agentes opcionales -------------------------------------
+# Este mapa define en que fases puede participar cada agente opcional como
+# refuerzo de los agentes de nucleo. La posicion indica si se ejecuta en
+# paralelo con los de nucleo o de forma secuencial despues de ellos.
+#
+# El Bibliotecario no participa en flujos activos: es consultivo (via MCP)
+# y no necesita integrarse en ninguna fase de ejecucion.
+
+OPTIONAL_INTEGRATIONS: Dict[str, Dict[str, Any]] = {
+    "data-engineer": {
+        "fases": ["arquitectura", "desarrollo"],
+        "posicion": "paralelo",
+    },
+    "ux-reviewer": {
+        "fases": ["calidad", "producto"],
+        "posicion": "paralelo",
+    },
+    "performance-engineer": {
+        "fases": ["calidad"],
+        "posicion": "paralelo",
+    },
+    "github-manager": {
+        "fases": ["entrega", "despliegue"],
+        "posicion": "secuencial",
+    },
+    "seo-specialist": {
+        "fases": ["calidad"],
+        "posicion": "paralelo",
+    },
+    "copywriter": {
+        "fases": ["documentacion"],
+        "posicion": "paralelo",
+    },
+    "librarian": {
+        "fases": [],
+        "posicion": "none",
+    },
+}
+
+
+def get_effective_agents(
+    phase_name: str,
+    active_optionals: Optional[Dict[str, bool]] = None,
+) -> Dict[str, List[str]]:
+    """Calcula los agentes que participan en una fase, incluyendo opcionales activos.
+
+    Fusiona los agentes de nucleo definidos en FLOWS con los agentes opcionales
+    activos que tienen integracion en esa fase. El resultado distingue entre
+    agentes en paralelo y secuenciales para que los commands sepan como lanzarlos.
+
+    Args:
+        phase_name: nombre de la fase (ej. "arquitectura", "calidad").
+        active_optionals: diccionario con los agentes opcionales activos.
+            Clave = nombre del agente, valor = True si esta activo.
+            Si es None, no se anaden opcionales.
+
+    Returns:
+        Diccionario con dos claves:
+        - "paralelo": lista de agentes opcionales que se ejecutan en paralelo
+          con los de nucleo.
+        - "secuencial": lista de agentes opcionales que se ejecutan despues
+          de los de nucleo.
+
+    Ejemplo:
+        >>> get_effective_agents("calidad", {"ux-reviewer": True, "performance-engineer": True})
+        {"paralelo": ["ux-reviewer", "performance-engineer"], "secuencial": []}
+    """
+    if active_optionals is None:
+        return {"paralelo": [], "secuencial": []}
+
+    paralelo: List[str] = []
+    secuencial: List[str] = []
+
+    for agent_name, config in OPTIONAL_INTEGRATIONS.items():
+        if not active_optionals.get(agent_name, False):
+            continue
+        if phase_name not in config.get("fases", []):
+            continue
+
+        posicion = config.get("posicion", "paralelo")
+        if posicion == "secuencial":
+            secuencial.append(agent_name)
+        elif posicion == "paralelo":
+            paralelo.append(agent_name)
+
+    return {"paralelo": paralelo, "secuencial": secuencial}
+
+
 def create_session(command: str, description: str) -> Dict[str, Any]:
     """
     Crea una nueva sesión de trabajo para el flujo indicado.
@@ -501,7 +589,9 @@ def load_state(state_path: str) -> Optional[Dict[str, Any]]:
         return None
     except json.JSONDecodeError as e:
         print(
-            f"[Alfred Dev] Error: el fichero de estado '{state_path}' está corrupto: {e}",
+            f"[Alfred Dev] Error: el fichero de estado '{state_path}' esta corrupto: {e}. "
+            f"Para resolver, elimina el fichero manualmente y se creara uno nuevo "
+            f"en la proxima sesion.",
             file=sys.stderr,
         )
         return None

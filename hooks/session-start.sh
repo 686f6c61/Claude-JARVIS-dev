@@ -205,8 +205,10 @@ try:
 
     db.close()
     print('\n'.join(lines))
-except ImportError:
+except ImportError as e:
     # core.memory no disponible: la memoria no esta instalada o el path es incorrecto
+    print(f'[Alfred Dev] Aviso: no se pudo cargar el modulo de memoria: {e}. '
+          f'El resumen de decisiones no estara disponible.', file=sys.stderr)
     sys.exit(0)
 except sqlite3.OperationalError as e:
     # DB bloqueada, disco lleno u otro error operativo de SQLite
@@ -234,11 +236,32 @@ fi
 # Consulta la última release publicada en GitHub. Si hay versión nueva,
 # añade un aviso al contexto de sesión. Falla silenciosamente si no hay
 # red, se excede el timeout (3s) o la API devuelve error.
-CURRENT_VERSION="0.2.1"
+# La version se lee de plugin.json para evitar tener que actualizarla
+# manualmente con cada bump. Si la lectura falla, se usa un fallback.
+CURRENT_VERSION=$(python3 -c "
+import json, sys
+try:
+    with open(sys.argv[1], 'r') as f:
+        print(json.load(f).get('version', '0.0.0'))
+except Exception as e:
+    print(f'[Alfred Dev] Aviso: no se pudo leer la version del plugin: {e}', file=sys.stderr)
+    print('0.0.0')
+" "${PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null) || CURRENT_VERSION="0.0.0"
 if command -v curl &>/dev/null; then
   LATEST_RELEASE=$(curl -s --max-time 3 --proto '=https' \
+    -H "User-Agent: alfred-dev-plugin" \
     "https://api.github.com/repos/686f6c61/alfred-dev/releases/latest" \
-    | python3 -c "import json,sys; print(json.load(sys.stdin).get('tag_name','').lstrip('v'))" 2>/dev/null || echo "")
+    | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    if 'tag_name' in data:
+        print(data['tag_name'].lstrip('v'))
+    elif 'message' in data:
+        print(f'[Alfred Dev] GitHub API: {data[\"message\"]}', file=sys.stderr)
+except Exception as e:
+    print(f'[Alfred Dev] Error comprobando actualizaciones: {e}', file=sys.stderr)
+" 2>/dev/null || echo "")
 
   # Solo aceptar versiones con formato semántico válido para evitar
   # inyección de contenido arbitrario desde la respuesta de la API.

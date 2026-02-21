@@ -132,7 +132,7 @@ skills/
   documentación/     -- api-docs, architecture-docs, user-guide, changelog
 ```
 
-### Hooks (7)
+### Hooks (9)
 
 Los hooks interceptan eventos del ciclo de vida de Claude Code para aplicar validaciones automaticas:
 
@@ -141,6 +141,8 @@ Los hooks interceptan eventos del ciclo de vida de Claude Code para aplicar vali
 | `session-start.sh` | `SessionStart` | Detecta stack tecnologico, inyecta contexto de sesion y memoria persistente |
 | `stop-hook.py` | `Stop` | Genera resumen de sesion con fases completadas y pendientes |
 | `secret-guard.sh` | `PreToolUse` (Write/Edit) | Bloquea escritura de secretos (API keys, tokens, passwords) |
+| `dangerous-command-guard.py` | `PreToolUse` (Bash) | Bloquea comandos destructivos (rm -rf /, force push, DROP DATABASE, etc.) |
+| `sensitive-read-guard.py` | `PreToolUse` (Read) | Avisa al leer ficheros sensibles (claves privadas, .env, credenciales) |
 | `quality-gate.py` | `PostToolUse` (Bash) | Verifica que los tests pasen despues de ejecuciones de Bash |
 | `dependency-watch.py` | `PostToolUse` (Write/Edit) | Detecta dependencias nuevas y notifica al security officer |
 | `spelling-guard.py` | `PostToolUse` (Write/Edit) | Detecta palabras castellanas sin tilde al escribir o editar ficheros |
@@ -226,7 +228,7 @@ Funcionalidades principales:
 
 - **Trazabilidad completa**: problema, decision, commit y validacion enlazados con IDs referenciables.
 - **Busqueda**: texto completo con FTS5 (cuando disponible) o fallback a LIKE.
-- **Servidor MCP**: 6 herramientas accesibles desde cualquier agente (buscar, registrar, consultar linea temporal).
+- **Servidor MCP**: 10 herramientas accesibles desde cualquier agente (buscar, registrar, consultar linea temporal, estadisticas, gestion de iteraciones).
 - **El Bibliotecario**: agente opcional que responde consultas historicas citando siempre las fuentes con formato `[D#id]`, `[C#sha]`, `[I#id]`.
 - **Contexto de sesion**: al iniciar una sesion, se inyectan automaticamente las ultimas 5 decisiones y la iteracion activa para dar continuidad al trabajo.
 - **Seguridad**: sanitizacion de secretos con los mismos patrones que `secret-guard.sh`, permisos 0600 en el fichero de base de datos.
@@ -243,7 +245,7 @@ alfred-dev/
   agents/optional/        # 7 agentes opcionales
   commands/               # 10 comandos /alfred
   skills/                 # 56 skills en 13 dominios
-  hooks/                  # 7 hooks del ciclo de vida
+  hooks/                  # 9 hooks del ciclo de vida
     hooks.json            # Configuracion de eventos
   core/                   # Motor de orquestacion y memoria (Python)
   mcp/                    # Servidor MCP stdio (memoria persistente)

@@ -18,14 +18,19 @@ import sys
 # --- Patrones de runners de tests ---
 
 # Expresiones regulares que identifican comandos de ejecución de tests.
-# Se comprueba contra el comando completo para evitar falsos positivos
-# (por ejemplo, un 'grep pytest' no debería activar el hook).
+# Los runners de una sola palabra (pytest, jest, etc.) exigen posición de
+# comando: inicio de cadena o tras un operador shell (|, ;, &, &&, ||).
+# Esto evita falsos positivos como 'grep pytest config.ini'.
+# Los runners de varias palabras (cargo test, npm test, etc.) usan \b
+# porque su prefijo ya los ancla de forma natural.
+_CMD_POS = r"(?:^|[;&|])\s*"
+
 TEST_RUNNERS = [
-    r"\bpytest\b",
+    rf"{_CMD_POS}pytest\b",
     r"\bpython\s+-m\s+pytest\b",
-    r"\bvitest\b",
-    r"\bjest\b",
-    r"\bmocha\b",
+    rf"{_CMD_POS}vitest\b",
+    rf"{_CMD_POS}jest\b",
+    rf"{_CMD_POS}mocha\b",
     r"\bcargo\s+test\b",
     r"\bgo\s+test\b",
     r"\bnpm\s+test\b",
@@ -37,8 +42,8 @@ TEST_RUNNERS = [
     r"\byarn\s+test\b",
     r"\byarn\s+run\s+test\b",
     r"\bpython\s+-m\s+unittest\b",
-    r"\bphpunit\b",
-    r"\brspec\b",
+    rf"{_CMD_POS}phpunit\b",
+    rf"{_CMD_POS}rspec\b",
     r"\bmix\s+test\b",
     r"\bdotnet\s+test\b",
     r"\bmaven\s+test\b",
@@ -86,10 +91,9 @@ def is_test_command(command: str) -> bool:
 def has_failures(output: str) -> bool:
     """Analiza la salida de un comando de tests en busca de fallos.
 
-    Busca patrones comunes de fallo en la salida estándar del comando.
-    Los patrones se aplican línea a línea con búsqueda case-sensitive
-    para los indicadores que suelen ir en mayúsculas y case-insensitive
-    para los genéricos.
+    Busca patrones comunes de fallo en la salida del comando usando
+    busqueda case-insensitive para cubrir todas las variantes de
+    formato de los distintos runners (FAIL, Fail, fail, etc.).
 
     Args:
         output: Salida estándar del comando Bash.
@@ -97,7 +101,10 @@ def has_failures(output: str) -> bool:
     Returns:
         True si se detecta al menos un patrón de fallo.
     """
-    return any(re.search(pattern, output) for pattern in FAILURE_PATTERNS)
+    return any(
+        re.search(pattern, output, re.IGNORECASE)
+        for pattern in FAILURE_PATTERNS
+    )
 
 
 def main():

@@ -277,6 +277,12 @@ Cada hallazgo lleva una puntuación de confianza de 0 a 100:
 entre 60-79 se agrupan en una sección "Notas de baja confianza" al final del informe, para
 que el usuario decida si investigarlos.
 
+## Registro de decisiones
+
+Cuando tomes una decisión de seguridad relevante (dependencia aprobada o rechazada, excepción de política aceptada, mitigación elegida para un riesgo, configuración de seguridad), regístrala en la memoria del proyecto usando la herramienta MCP `memory_log_decision`.
+
+Campos obligatorios: `title` y `chosen`. Campos recomendados: `alternatives`, `rationale`, `impact` (usa 'high' o 'critical' para decisiones de seguridad), `phase`. Registra especialmente las dependencias rechazadas y el motivo: evita que alguien las proponga de nuevo sin saber por qué se descartaron.
+
 ## Cadena de integración
 
 | Relación | Agente | Contexto |

@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Tests para el hook stop-hook.py (patron ralph-loop).
+
+Estos tests verifican la logica de decision del hook: cuando bloquea
+la parada de Claude y cuando la permite. No ejecutan el hook como
+proceso externo, sino que importan la logica de core/orchestrator.py
+y simulan el estado de sesion.
+"""
+
+import json
+import os
+import sys
+import tempfile
+import unittest
+
+# Anadir la raiz del plugin al path para importar core
+_plugin_root = os.path.join(os.path.dirname(__file__), "..")
+sys.path.insert(0, _plugin_root)
+
+from core.orchestrator import FLOWS, create_session, load_state, save_state
+
+
+class TestStopHookLogic(unittest.TestCase):
+    """Verifica la logica de bloqueo del hook de Stop."""
+
+    def setUp(self):
+        """Crea un directorio temporal para los ficheros de estado."""
+        self.tmpdir = tempfile.mkdtemp()
+        self.state_path = os.path.join(self.tmpdir, "alfred-dev-state.json")
+
+    def tearDown(self):
+        """Limpia el directorio temporal."""
+        if os.path.exists(self.state_path):
+            os.unlink(self.state_path)
+        os.rmdir(self.tmpdir)
+
+    def test_no_state_file_allows_stop(self):
+        """Sin fichero de estado, no hay sesion activa."""
+        session = load_state(self.state_path)
+        self.assertIsNone(session)
+
+    def test_completed_session_allows_stop(self):
+        """Una sesion completada no bloquea la parada."""
+        session = create_session("feature", "Test feature")
+        session["fase_actual"] = "completado"
+        save_state(session, self.state_path)
+
+        loaded = load_state(self.state_path)
+        self.assertIsNotNone(loaded)
+        self.assertEqual(loaded["fase_actual"], "completado")
+
+    def test_active_session_should_block(self):
+        """Una sesion activa en una fase intermedia deberia bloquear."""
+        session = create_session("feature", "Test feature")
+        save_state(session, self.state_path)
+
+        loaded = load_state(self.state_path)
+        self.assertIsNotNone(loaded)
+        self.assertNotEqual(loaded["fase_actual"], "completado")
+        # Verificar que tiene informacion suficiente para construir el bloqueo
+        self.assertIn(loaded["comando"], FLOWS)
+
+    def test_fix_session_blocks_on_diagnostico(self):
+        """Un fix en fase de diagnostico bloquea."""
+        session = create_session("fix", "Bug critico")
+        save_state(session, self.state_path)
+
+        loaded = load_state(self.state_path)
+        self.assertEqual(loaded["fase_actual"], "diagnostico")
+        self.assertEqual(loaded["comando"], "fix")
+
+    def test_spike_session_blocks_on_exploracion(self):
+        """Un spike en fase de exploracion bloquea."""
+        session = create_session("spike", "Investigar opciones")
+        save_state(session, self.state_path)
+
+        loaded = load_state(self.state_path)
+        self.assertEqual(loaded["fase_actual"], "exploracion")
+
+    def test_corrupted_state_allows_stop(self):
+        """Un fichero de estado corrupto (JSON invalido) permite parar."""
+        with open(self.state_path, "w") as f:
+            f.write("{corrupted json!!")
+
+        loaded = load_state(self.state_path)
+        self.assertIsNone(loaded)
+
+    def test_invalid_structure_allows_stop(self):
+        """Un estado con estructura invalida (sin claves obligatorias) permite parar."""
+        with open(self.state_path, "w") as f:
+            json.dump({"random": "data"}, f)
+
+        loaded = load_state(self.state_path)
+        self.assertIsNone(loaded)
+
+    def test_unknown_flow_allows_stop(self):
+        """Un estado con un flujo desconocido no deberia causar excepcion."""
+        session = {
+            "comando": "flujo_inventado",
+            "fase_actual": "fase_x",
+            "fase_numero": 0,
+            "fases_completadas": [],
+            "artefactos": [],
+        }
+        save_state(session, self.state_path)
+
+        loaded = load_state(self.state_path)
+        self.assertIsNotNone(loaded)
+        # El hook verificaria que el flujo existe en FLOWS y, al no existir,
+        # permitiria la parada. Aqui verificamos que load_state no falla.
+        self.assertNotIn(loaded["comando"], FLOWS)
+
+
+if __name__ == "__main__":
+    unittest.main()

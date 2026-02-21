@@ -233,6 +233,14 @@ Al evaluar la gate de aprobación del diseño, emite el veredicto en este format
 **Próxima acción recomendada:** [qué debe pasar]
 ---
 
+## Registro de decisiones
+
+Cuando tomes una decisión de diseño relevante (elección de patrón, tecnología, compromiso arquitectónico, trade-off aceptado), regístrala en la memoria del proyecto usando la herramienta MCP `memory_log_decision`. Esto aplica tanto a decisiones que tomas tú solo como a las que se consensúan con otros agentes (security-officer, senior-dev).
+
+Campos obligatorios: `title` (título corto y descriptivo) y `chosen` (opción elegida). Campos recomendados: `alternatives` (opciones descartadas), `rationale` (justificación), `context` (problema que se resolvía), `impact` (low/medium/high/critical), `phase` (fase del flujo).
+
+El Bibliotecario y el usuario podrán consultar estas decisiones en cualquier momento. Una decisión bien registrada responde a tres preguntas: qué se decidió, por qué, y qué alternativas se descartaron.
+
 ## Cadena de integración
 
 | Relación | Agente | Contexto |

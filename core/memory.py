@@ -627,6 +627,22 @@ class MemoryDB:
         ).fetchone()
         return dict(row) if row else None
 
+    def get_latest_iteration(self) -> Optional[Dict[str, Any]]:
+        """
+        Obtiene la iteracion mas reciente independientemente de su estado.
+
+        A diferencia de ``get_active_iteration``, no filtra por estado.
+        Util como fallback cuando no hay iteracion activa y se necesita
+        contexto de la ultima iteracion registrada.
+
+        Returns:
+            Diccionario con los datos de la iteracion mas reciente, o None.
+        """
+        row = self._conn.execute(
+            "SELECT * FROM iterations ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        return dict(row) if row else None
+
     # --- Lectura: decisiones ------------------------------------------------
 
     def get_decisions(
